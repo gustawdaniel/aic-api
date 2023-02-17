@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum RequestType {
+  list
+  article
+}
+
+enum SourceType {
+  buisnesinsider
+  ghost
+}
+
+enum SinkType {
+  wordpress
+  ghost
+}
+
+model sources {
+  id       String     @id @default(auto()) @map("_id") @db.ObjectId
+  url      String
+  type     SourceType // constrained to selected type
+  requests requests[]
+  user     users      @relation(fields: [user_id], references: [id])
+  user_id  String     @db.ObjectId
+}
+
+model requests {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  created_at  DateTime    @default(now())
+  type        RequestType
+  source      sources     @relation(fields: [source_id], references: [id])
+  source_id   String      @db.ObjectId
+  response_at DateTime?
+  error       String?
+  html        String?
+  data        Json?
+  url         String
+  code        Int?
+  user        users       @relation(fields: [user_id], references: [id])
+  user_id     String      @db.ObjectId
+  articles    articles[]
+}
+
+type ComponentVersion {
+  replaced_at DateTime @default(now())
+  text        String
+}
+
+type Component {
+  xpath    String[]
+  text     String
+  versions ComponentVersion[]
+}
+
+enum ArticleState {
+  new
+  queued
+  rejected
+  verification
+  accepted
+}
+
+model articles {
+  id         String       @id @default(auto()) @map("_id") @db.ObjectId
+  components Component[]
+  state      ArticleState @default(new)
+  user       users        @relation(fields: [user_id], references: [id])
+  user_id    String       @db.ObjectId
+  request    requests     @relation(fields: [request_id], references: [id])
+  request_id String       @db.ObjectId
+}
+
+model prompts {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  value   String
+  user    users  @relation(fields: [user_id], references: [id])
+  user_id String @db.ObjectId
+}
+
+model sinks {
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  url     String
+  type    SinkType
+  user    users    @relation(fields: [user_id], references: [id])
+  user_id String   @db.ObjectId
+}
+
+model users {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  email     String     @unique
+  avatar    String
+  full_name String
+  sinks     sinks[]
+  sources   sources[]
+  requests  requests[]
+  articles  articles[]
+  prompts   prompts[]
+}

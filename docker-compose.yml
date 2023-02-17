@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  app:
+    image: registry.digitalocean.com/main/aic-api
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    command: 'node src/index.js'
+
+networks:
+  default:
+    external:
+      name: ${NETWORK:-proxy}
