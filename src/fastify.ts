@@ -6,6 +6,7 @@ import {auth, JWTUser} from "./functions/auth";
 import fastifySensible from '@fastify/sensible'
 import {Request} from "./routes/Request";
 import {Article} from "./routes/Article";
+import {Version} from "./routes/Version";
 
 declare module 'fastify' {
     interface FastifyRequest {
@@ -23,6 +24,7 @@ export function getFastifyServer(): FastifyInstance {
     // - endpoints
     // - hooks
     // - middlewares
+    app.get('/', Version.root)
     app.get('/source', {preValidation: [auth]}, Source.list)
 
     app.post('/request', {preValidation: [auth]}, Request.inject)
