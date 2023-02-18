@@ -1,12 +1,13 @@
-import fastify, {FastifyInstance} from "fastify";
+import fastify, {errorCodes, FastifyInstance} from "fastify";
 import {Auth} from "./routes/Auth";
 import cors from '@fastify/cors'
 import {Source} from "./routes/Source";
-import {auth, JWTUser} from "./functions/auth";
+import {admin, auth, JWTUser} from "./functions/auth";
 import fastifySensible from '@fastify/sensible'
 import {Request} from "./routes/Request";
 import {Article} from "./routes/Article";
 import {Version} from "./routes/Version";
+import {User} from "./routes/User";
 
 declare module 'fastify' {
     interface FastifyRequest {
@@ -20,12 +21,27 @@ export function getFastifyServer(): FastifyInstance {
     app.register(cors)
     app.register(fastifySensible)
 
+    app.setErrorHandler(function (error, request, reply) {
+        if (error instanceof errorCodes.FST_ERR_BAD_STATUS_CODE) {
+            // Log error
+            this.log.error(error)
+            // Send error response
+            reply.status(500).send({ ok: false })
+        } else {
+            console.log("XX".red, error)
+            // fastify will use parent error handler to handle this
+            reply.send(error)
+        }
+    })
+
     // there add
     // - endpoints
     // - hooks
     // - middlewares
     app.get('/', Version.root)
     app.get('/source', {preValidation: [auth]}, Source.list)
+    app.post('/source', {preValidation: [auth]}, Source.create)
+    app.delete('/source/:id', {preValidation: [auth]}, Source.remove)
 
     app.post('/request', {preValidation: [auth]}, Request.inject)
 
@@ -33,7 +49,10 @@ export function getFastifyServer(): FastifyInstance {
     app.get('/article/:id', {preValidation: [auth]}, Article.one)
     app.put('/article/:id', {preValidation: [auth]}, Article.update)
 
+    app.get('/user', {preValidation: [admin]}, User.list)
+
     app.post('/google-verify', Auth.googleVerify)
+    app.post('/impersonate', {preValidation: [admin]}, Auth.impersonate)
 
     return app
 }

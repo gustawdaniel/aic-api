@@ -7,7 +7,8 @@ export function parseArticle(html: string, type: SourceType): ArticleData {
         case SourceType.buisnesinsider: {
             const sections = cheerio.load(html)('article>section.main').toArray()
 
-            const title = sections.length ? cheerio.load(sections[0])('h1.article_title').text() : '';
+            let title = sections.length ? cheerio.load(sections[0])('h1.article_title').text() : '';
+            title ||= cheerio.load(html)('h1.article_title').text() ?? '';
 
             const res = sections.map((section) => {
                 return cheerio.load(section)([
@@ -29,8 +30,15 @@ export function parseArticle(html: string, type: SourceType): ArticleData {
                     .map((({element, text}) => ({element, text})))
             }).flat()
 
-            if(/Autor: .*?, dziennikarz Business Insider Polska/.test(res[res.length-1].text)) {
+            if (/Autor: .*?, dziennikarz Business Insider Polska/.test(res[res.length - 1].text)) {
                 res.pop()
+            }
+
+            if (!res.length || res[0].element !== 'h1') {
+                res.unshift({
+                    element: 'h1',
+                    text: title
+                })
             }
 
             return {
@@ -66,7 +74,7 @@ export function parseArticle(html: string, type: SourceType): ArticleData {
 
             return {
                 title,
-                components:  res.map(el => ({
+                components: res.map(el => ({
                     text: el.text,
                     xpath: [el.element],
                     versions: []

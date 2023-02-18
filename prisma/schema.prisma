@@ -25,6 +25,10 @@ enum SinkType {
   ghost
 }
 
+enum UserRole {
+  admin
+}
+
 model sources {
   id       String     @id @default(auto()) @map("_id") @db.ObjectId
   url      String
@@ -38,7 +42,7 @@ model requests {
   id          String      @id @default(auto()) @map("_id") @db.ObjectId
   created_at  DateTime    @default(now())
   type        RequestType
-  source      sources     @relation(fields: [source_id], references: [id])
+  source      sources     @relation(fields: [source_id], references: [id], onDelete: Cascade)
   source_id   String      @db.ObjectId
   response_at DateTime?
   error       String?
@@ -76,7 +80,7 @@ model articles {
   state      ArticleState @default(new)
   user       users        @relation(fields: [user_id], references: [id])
   user_id    String       @db.ObjectId
-  request    requests     @relation(fields: [request_id], references: [id])
+  request    requests     @relation(fields: [request_id], references: [id], onDelete: Cascade)
   request_id String       @db.ObjectId
 }
 
@@ -105,4 +109,5 @@ model users {
   requests  requests[]
   articles  articles[]
   prompts   prompts[]
+  roles     UserRole[] @default([])
 }

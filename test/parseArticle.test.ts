@@ -30,6 +30,14 @@ describe('parseArticle', () => {
         expect(allText).not.toContain('Dalsza część artykułu')
     });
 
+    it('main title in business insider', () => {
+        // https://businessinsider.com.pl/prawo/prawnik-bankow-opinia-rzecznika-tsue-w-sprawie-c-52021-jest-sprzeczna/j2k38xl
+        const html = fs.readFileSync(__dirname + '/bi2.article.html').toString()
+        expect(typeof html).toEqual('string');
+        const article = parseArticle(html, SourceType.buisnesinsider);
+        expect(article.title).toEqual('Opinia rzecznika TSUE jest wewnętrznie sprzeczna. Prawnik banków: poczekajmy na wyrok')
+    })
+
     it('ghost', () => {
         const html = fs.readFileSync(__dirname + '/gh.article.html').toString()
         expect(typeof html).toEqual('string');

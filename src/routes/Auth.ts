@@ -1,8 +1,7 @@
-import {FastifyRequest} from "fastify";
+import {FastifyReply, FastifyRequest} from "fastify";
 import {OAuth2Client} from 'google-auth-library';
 import {prisma} from "../storage/prisma";
 import {tokenizeUser} from "../functions/auth";
-
 
 export class Auth {
     static async googleVerify(req: FastifyRequest<{ Body: { credential: string } }>) {
@@ -36,20 +35,34 @@ export class Auth {
                 })
             }
 
-
-            console.log(payload);
             return {
                 user: {
                     id: user.id,
                     email: user.email,
                     avatar: user.avatar,
-                    full_name: user.full_name
+                    full_name: user.full_name,
+                    roles: user.roles
                 },
                 token: tokenizeUser(user)
             };
         } catch (e) {
             console.log("errr", e);
             throw e;
+        }
+    }
+
+    static async impersonate(req: FastifyRequest<{ Body: { id: string } }>, reply: FastifyReply) {
+        const user = await prisma.users.findUnique({where: {id: req.body.id}})
+        if(!user) return reply.notFound(`User ${req.body.id} not found`);
+        return {
+            user: {
+                id: user.id,
+                email: user.email,
+                avatar: user.avatar,
+                full_name: user.full_name,
+                roles: user.roles
+            },
+            token: tokenizeUser(user)
         }
     }
 }
