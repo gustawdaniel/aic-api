@@ -14,7 +14,7 @@ services:
         node src/index.js
 
 
-#networks:
-#  default:
-#    external:
-#      name: ${NETWORK:-proxy}
+networks:
+  default:
+    external:
+      name: ${NETWORK:-proxy}
