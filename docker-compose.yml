@@ -7,9 +7,14 @@ services:
       - "4000:4000"
     env_file:
       - .env
-    command: 'ts-node migrations/index.ts up && node src/index.js'
+    entrypoint: ["/bin/sh","-c"]
+    command:
+      - |
+        node migrations/index.js up
+        node src/index.js
 
-networks:
-  default:
-    external:
-      name: ${NETWORK:-proxy}
+
+#networks:
+#  default:
+#    external:
+#      name: ${NETWORK:-proxy}
