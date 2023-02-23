@@ -13,7 +13,6 @@ services:
         node migrations/index.js up
         node src/index.js
 
-
 networks:
   default:
     external:

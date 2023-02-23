@@ -46,7 +46,8 @@ export function parseArticle(html: string, type: SourceType): ArticleData {
                 components: res.map(el => ({
                     text: el.text,
                     xpath: [el.element],
-                    versions: []
+                    versions: [],
+                    finish_reason: ''
                 }))
             }
         }
@@ -77,7 +78,8 @@ export function parseArticle(html: string, type: SourceType): ArticleData {
                 components: res.map(el => ({
                     text: el.text,
                     xpath: [el.element],
-                    versions: []
+                    versions: [],
+                    finish_reason: ''
                 }))
             }
         }

@@ -8,6 +8,8 @@ import {Request} from "./routes/Request";
 import {Article} from "./routes/Article";
 import {Version} from "./routes/Version";
 import {User} from "./routes/User";
+import {ProcessingTemplate} from "./routes/ProcessingTemplate";
+import {Target} from "./routes/Target";
 
 declare module 'fastify' {
     interface FastifyRequest {
@@ -39,9 +41,17 @@ export function getFastifyServer(): FastifyInstance {
     // - hooks
     // - middlewares
     app.get('/', Version.root)
+
     app.get('/source', {preValidation: [auth]}, Source.list)
     app.post('/source', {preValidation: [auth]}, Source.create)
     app.delete('/source/:id', {preValidation: [auth]}, Source.remove)
+
+    app.get('/target', {preValidation: [auth]}, Target.list)
+    app.post('/target', {preValidation: [auth]}, Target.create)
+    app.delete('/target/:id', {preValidation: [auth]}, Target.remove)
+
+
+    app.post('/processing-template', {preValidation: [auth]}, ProcessingTemplate.create)
 
     app.post('/request', {preValidation: [auth]}, Request.inject)
 
@@ -50,6 +60,8 @@ export function getFastifyServer(): FastifyInstance {
     app.put('/article/:id', {preValidation: [auth]}, Article.update)
 
     app.get('/user', {preValidation: [admin]}, User.list)
+    app.get('/me', {preValidation: [auth]}, User.getMe)
+    app.patch('/me', {preValidation: [auth]}, User.pathMe)
 
     app.post('/google-verify', Auth.googleVerify)
     app.post('/impersonate', {preValidation: [admin]}, Auth.impersonate)
