@@ -2,6 +2,11 @@ import * as cheerio from "cheerio";
 import {ArticleData} from "../interfaces/ArticleData";
 import {SourceType} from "@prisma/client";
 
+function cleanText(tagName: string, text: string):string {
+    if(['pre','code'.includes(tagName)]) return text;
+    return text.replace(/\s{2,}/g, ' ')
+}
+
 export function parseArticle(html: string, type: SourceType): ArticleData {
     switch (type) {
         case SourceType.buisnesinsider: {
@@ -61,10 +66,10 @@ export function parseArticle(html: string, type: SourceType): ArticleData {
                 'pre',
                 'blockquote'
             ].map(selector => `main>article>section.gh-content>${selector}`).join(', ')).toArray()
-                .map(el => ({
-                    element: 'tagName' in el ? el.tagName : '',
-                    text: cheerio.load(el).text().trim().replace(/\s{2,}/g, ' ')
-                }));
+                .map(el => { const tagName = 'tagName' in el ? el.tagName : ''; return {
+                    element: tagName,
+                    text: cleanText(tagName, cheerio.load(el).text().trim())
+                }});
 
             res.unshift({
                 text: title,

@@ -72,7 +72,7 @@ enum ArticleState {
   queued
   rejected
   verification
-  accepted
+  published
 }
 
 type TargetAuthType {

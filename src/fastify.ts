@@ -10,6 +10,7 @@ import {Version} from "./routes/Version";
 import {User} from "./routes/User";
 import {ProcessingTemplate} from "./routes/ProcessingTemplate";
 import {Target} from "./routes/Target";
+import {AxiosError} from "axios";
 
 declare module 'fastify' {
     interface FastifyRequest {
@@ -28,9 +29,14 @@ export function getFastifyServer(): FastifyInstance {
             // Log error
             this.log.error(error)
             // Send error response
-            reply.status(500).send({ ok: false })
+            reply.status(500).send({ok: false})
         } else {
-            console.log("XX".red, error)
+            if(error instanceof AxiosError) {
+                console.log("ZZ > req".red, error.request.headers, error.request.url, error.request.method, error.request.data)
+                console.log("ZZ > res".red, error.response?.status, error.response?.data, error.response?.headers)
+            } else {
+                console.log("XX".red, error)
+            }
             // fastify will use parent error handler to handle this
             reply.send(error)
         }
@@ -58,6 +64,7 @@ export function getFastifyServer(): FastifyInstance {
     app.get('/article', {preValidation: [auth]}, Article.list)
     app.get('/article/:id', {preValidation: [auth]}, Article.one)
     app.put('/article/:id', {preValidation: [auth]}, Article.update)
+    app.post('/article/:articleId/publish/:targetId', {preValidation: [auth]}, Article.publish)
 
     app.get('/user', {preValidation: [admin]}, User.list)
     app.get('/me', {preValidation: [auth]}, User.getMe)

@@ -261,6 +261,12 @@
 </code></pre>
                 <p>In this case, we put to work <code>jq</code> - powerfull templater for json files. It allows replacing the list of dates to json string required by <code>cli-gh-cal</code>. After executing this command you should see an image similar to presented at the beginning.</p>
                 <h3 id="required-packages">Required packages</h3>
+                <pre><code class="language-rust">use linear_sort_reverse_search_rust_easy::reverse_search;
+use std::io;
+
+fn main() -&gt; io::Result&lt;()&gt; {
+    reverse_search(&amp;mut io::stdin(), &amp;mut io::stdout())
+}</code></pre>
                 <p>To work there have to be installed <code>node</code>. I recommend installing it with <code>nvm</code> on the local machine.</p>
                 <blockquote>
                     <p><a href="https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-18-04">https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-18-04</a></p>
