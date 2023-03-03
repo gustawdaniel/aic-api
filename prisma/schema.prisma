@@ -142,10 +142,20 @@ model users {
   processing_templates processing_templates[]
 }
 
+enum GptRole {
+  assistant
+  system
+  user
+}
+
+type GptMessage {
+  role    GptRole
+  content String
+}
+
 type GptChoice {
-  text          String
+  message       GptMessage
   index         Int
-  logprobs      String?
   finish_reason String
 }
 
@@ -156,20 +166,15 @@ type GptUsage {
 }
 
 model ai_requests {
-  id                String      @id @default(auto()) @map("_id") @db.ObjectId
-  model             String
-  prompt            String
-  temperature       Float
-  max_tokens        Int
-  top_p             Float
-  frequency_penalty Float
-  presence_penalty  Float
-  request_at        DateTime    @default(now())
-  gpt_id            String?
-  object            String?
-  created           DateTime?
-  choices           GptChoice[]
-  usage             GptUsage?
+  id         String       @id @default(auto()) @map("_id") @db.ObjectId
+  model      String
+  messages   GptMessage[]
+  request_at DateTime     @default(now())
+  gpt_id     String?
+  object     String?
+  created    DateTime?
+  choices    GptChoice[]
+  usage      GptUsage?
 }
 
 model error_logs {

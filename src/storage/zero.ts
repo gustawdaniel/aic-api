@@ -136,13 +136,13 @@ export async function pull(): Promise<void> {
             const command = getCommand(article.processing_template, component);
             if (command.length) {
                 const {
-                    text,
+                    message,
                     finish_reason
                 } = await client.ask(`${command}\n\n${component.text}`);
                 console.log(`${command}\n\n${component.text}`.blue)
-                console.log("[" + String(`${finish_reason}`.yellow) + "]" + String(`\t${text}`.green))
+                console.log("[" + String(`${finish_reason}`.yellow) + "]" + String(`\t${message.content}`.green))
                 component.versions.push({text: component.text, replaced_at: dayjs().toDate()});
-                component.text = text;
+                component.text = message.content;
                 component.finish_reason = finish_reason;
             } else {
                 // no process this paragraph

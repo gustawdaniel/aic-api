@@ -11,6 +11,7 @@ import {User} from "./routes/User";
 import {ProcessingTemplate} from "./routes/ProcessingTemplate";
 import {Target} from "./routes/Target";
 import {AxiosError} from "axios";
+import {Gpt3Controller as Gpt3} from "./routes/Gpt3";
 
 declare module 'fastify' {
     interface FastifyRequest {
@@ -69,6 +70,9 @@ export function getFastifyServer(): FastifyInstance {
     app.get('/user', {preValidation: [admin]}, User.list)
     app.get('/me', {preValidation: [auth]}, User.getMe)
     app.patch('/me', {preValidation: [auth]}, User.pathMe)
+
+    // gpt3
+    app.post('/ask', {preValidation: [auth]}, Gpt3.ask)
 
     app.post('/google-verify', Auth.googleVerify)
     app.post('/impersonate', {preValidation: [admin]}, Auth.impersonate)
