@@ -19,15 +19,13 @@ export class Gpt3Controller {
 
         const client = new GPT3(user.gpt3_api_key);
 
-        // return {
-        //     "message": {content: "\n\nJesteś wyjątkowy i ceniony.", author: 'system'},
-        //     "finish_reason": "stop"
-        // }
-
         const {
             message,
             finish_reason
-        } = await client.ask(req.body.text);
+        } = await client.ask([{
+            role: 'user',
+            content: req.body.text
+        }]);
 
         return {
             message,

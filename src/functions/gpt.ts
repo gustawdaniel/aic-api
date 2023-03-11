@@ -26,11 +26,8 @@ export class GPT3 {
         this.apiKey = apiKey;
     }
 
-    async ask(prompt: string): Promise<GptSimpleResponse> {
+    async ask(messages: Gpt3Message[]): Promise<GptSimpleResponse> {
         const model = "gpt-3.5-turbo";
-        const messages: Gpt3Message[] = [
-            {"role": "user", "content": prompt}
-        ];
 
         console.log(1);
         const existingAnswer = await prisma.ai_requests.findFirst({
@@ -57,7 +54,7 @@ export class GPT3 {
         })
 
         try {
-            console.log("query".yellow, prompt);
+            console.log("query".yellow, messages);
             const {data} = await backoff(this.apiKey, messages);
             console.log("response".green, data);
 
@@ -86,13 +83,14 @@ export class GPT3 {
 
             return {message: data.choices[0].message, finish_reason: data.choices[0].finish_reason ?? ''}
         } catch (error: any) {
+            console.log(error);
             await prisma.error_logs.create({
                 data: {
                     message: error.message,
                     name: error.name,
                     stack: error.stack,
                     context: {
-                        prompt
+                        messages: JSON.parse(JSON.stringify(messages))
                     }
                 }
             });

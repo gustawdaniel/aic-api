@@ -2,10 +2,11 @@ import {FastifyReply, FastifyRequest} from "fastify";
 
 import {prisma} from "../storage/prisma";
 import 'colors-cli/toxic'
-import { RequestType, SourceType} from "@prisma/client";
+import {Component, RequestType, SourceType} from "@prisma/client";
 import dayjs from "dayjs";
 import {getListRequest} from "../functions/getListRequest";
 import {getAndParseArticle} from "../functions/getAndParseArticle";
+import {ArticleData} from "../interfaces/ArticleData";
 
 export class Request {
     static async inject(req: FastifyRequest<{ Body: { source_id: string } }>, reply: FastifyReply) {
@@ -35,6 +36,7 @@ export class Request {
             }
         });
 
+        // get new articles
         for (const url of rss.items.map(item => item.link).filter(url => !existingRequests.map(req => req.url).includes(url))) {
             let itemRequest = await prisma.requests.create({
                 data: {
@@ -65,6 +67,22 @@ export class Request {
                     components: data.components,
                 }
             })
+        }
+
+        // recreate removed articles
+        for (const itemRequest of existingRequests) {
+            const article = await prisma.articles.findFirst({where: {request_id: itemRequest.id}});
+
+            if(!article) {
+                console.log("create", itemRequest.id);
+                await prisma.articles.create({
+                    data: {
+                        user_id: user.id,
+                        request_id: itemRequest.id,
+                        components: (itemRequest?.data as unknown as ArticleData).components,
+                    }
+                })
+            }
         }
 
         console.log(`finished in ${dayjs().diff(s)}ms`.green);

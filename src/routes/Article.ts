@@ -1,10 +1,11 @@
 import {ArticleState} from "@prisma/client";
 import {FastifyReply, FastifyRequest} from "fastify";
 import {prisma} from "../storage/prisma";
-import {push, ZeroMessage} from "../storage/zero";
 import {Wordpress} from "../platforms/Wordpress";
 import {getArticleHtmlContent, getArticleTitle} from "../functions/getArticleTitle";
 import {Ghost} from "../platforms/Ghost";
+import {processArticleQueue} from "../storage/queue";
+import {uid} from "uid";
 
 export class Article {
     static async list(req: FastifyRequest, reply: FastifyReply) {
@@ -42,7 +43,7 @@ export class Article {
         })
     }
 
-    static async update(req: FastifyRequest<{ Body: { state: ArticleState, processing_template_id?: string }, Params: { id: string } }>, reply: FastifyReply) {
+    static async update(req: FastifyRequest<{ Body: { state: ArticleState, processing_template_id?: string, queue_id?: string }, Params: { id: string } }>, reply: FastifyReply) {
         if (!req.user) return reply.unauthorized();
 
         if (req.body.state === 'queued' && !req.body.processing_template_id) {
@@ -64,7 +65,7 @@ export class Article {
                 return reply.unprocessableEntity(`You have to add gpt3_api_key to your account`);
             }
             console.log("pushing");
-            await push(new ZeroMessage(req.params.id, user.gpt3_api_key ?? ''))
+            await processArticleQueue.push({article_id: req.params.id, gpt3_api_key: user.gpt3_api_key ?? '', queue_id: req.body.queue_id ?? uid(), progress: 0})
             console.log("pushed");
         }
 
@@ -72,7 +73,10 @@ export class Article {
             where: {
                 id: req.params.id
             },
-            data: req.body
+            data: {
+                state: req.body.state,
+                processing_template_id: req.body.processing_template_id
+            }
         })
     }
 
@@ -99,16 +103,18 @@ export class Article {
 
         switch (target.type) {
             case 'wordpress': {
-                await new Wordpress(target.url, {
+                const response = await new Wordpress(target.url, {
                     username: target.auth.username ?? '',
                     password: target.auth.password ?? ''
                 }).publish(title, content);
+                console.log(response);
                 break;
             }
             case 'ghost': {
                 console.log("art", article.components);
                 console.log("content", content);
-                await new Ghost(target.url, target.auth.key ?? '').publish(title, content)
+                const response = await new Ghost(target.url, target.auth.key ?? '').publish(title, content)
+                console.log(response);
                 break;
             }
             default: {
@@ -127,5 +133,17 @@ export class Article {
 
         return {status: 'success'}
 
+    }
+
+    static delete(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+        if (!req.user) return reply.unauthorized();
+        return prisma.articles.delete({
+            where: {
+                id_user_id: {
+                    user_id: req.user.id,
+                    id: req.params.id
+                }
+            }
+        })
     }
 }

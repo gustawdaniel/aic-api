@@ -91,31 +91,38 @@ model articles {
   request_id             String                @db.ObjectId
   processing_template    processing_templates? @relation(fields: [processing_template_id], references: [id])
   processing_template_id String?               @db.ObjectId
+
+  @@unique([id, user_id])
+}
+
+model contexts {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  value   String
+  user    users  @relation(fields: [user_id], references: [id])
+  user_id String @db.ObjectId
+
+  @@unique([id, user_id])
+  @@unique([value, user_id])
 }
 
 model prompts {
-  id               String                 @id @default(auto()) @map("_id") @db.ObjectId
-  value            String
-  user             users                  @relation(fields: [user_id], references: [id])
-  user_id          String                 @db.ObjectId
-  header_templates processing_templates[] @relation("header-template-prompt")
-  text_templates   processing_templates[] @relation("text-template-prompt")
-  code_templates   processing_templates[] @relation("code-template-prompt")
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  value   String
+  user    users  @relation(fields: [user_id], references: [id])
+  user_id String @db.ObjectId
 
   @@unique([value, user_id])
 }
 
 model processing_templates {
-  id        String     @id @default(auto()) @map("_id") @db.ObjectId
-  header    prompts?   @relation("header-template-prompt", fields: [header_id], references: [id])
-  header_id String?    @db.ObjectId
-  text      prompts?   @relation("text-template-prompt", fields: [text_id], references: [id])
-  text_id   String?    @db.ObjectId
-  code      prompts?   @relation("code-template-prompt", fields: [code_id], references: [id])
-  code_id   String?    @db.ObjectId
-  user      users      @relation(fields: [user_id], references: [id])
-  user_id   String     @db.ObjectId
-  articles  articles[]
+  id               String     @id @default(auto()) @map("_id") @db.ObjectId
+  context          String
+  header_prompt    String
+  paragraph_prompt String
+  code_prompt      String
+  user             users      @relation(fields: [user_id], references: [id])
+  user_id          String     @db.ObjectId
+  articles         articles[]
 }
 
 model targets {
@@ -140,6 +147,7 @@ model users {
   roles                UserRole[]             @default([])
   gpt3_api_key         String?
   processing_templates processing_templates[]
+  contexts             contexts[]
 }
 
 enum GptRole {

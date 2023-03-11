@@ -97,7 +97,7 @@ export class Ghost {
     private readonly config: AxiosRequestConfig;
     private readonly api: GhostAdminAPI;
 
-    constructor(url: string, adminKey: string, version: string = 'v3.0') {
+    constructor(url: string, adminKey: string, version: string = 'v5.37') {
         this.url = url;
         this.api = new GhostAdminAPI({
             url,
@@ -105,21 +105,27 @@ export class Ghost {
             version
         });
 
-        const [id, secret] = adminKey.split(':');
-        const token = jwt.sign({}, Buffer.from(secret, 'hex'), {
+        this.config = {
+            headers: {
+                Authorization: `Ghost ${Ghost.adminApiKeyToToken(adminKey)}`,
+                'User-Agent': 'GhostAdminSDK/1.13.2',
+                // 'Accept-Version': 'v3.0',
+                'Content-Type': 'application/json'
+            }
+        }
+    }
+
+    static adminApiKeyToToken(key: string): string {
+        // Split the key into ID and SECRET
+        const [id, secret] = key.split(':');
+
+        // Create the token (including decoding secret)
+        return jwt.sign({}, Buffer.from(secret, 'hex'), {
             keyid: id,
             algorithm: 'HS256',
             expiresIn: '5m',
-            audience: `/v3/admin/`
+            audience: `/admin/`
         });
-
-        this.config = {
-            headers: {
-                Authorization: `Ghost ${token}`,
-                'User-Agent': 'GhostAdminSDK/1.13.2',
-                'Accept-Version': 'v3.0'
-            }
-        }
     }
 
     async publish(title: string, content: string, publishedAt: string = new Date().toISOString()): Promise<GhostPublishResponse> {
@@ -130,25 +136,13 @@ export class Ghost {
             published_at: publishedAt
         };
 
-        // await this.api.posts.add(postData);
-
-        // {
-        //     url: 'https://gustawdaniel.com/ghost/api/v3/admin/posts/',
-        //         method: 'POST',
-        //     data: { posts: [ [Object] ] },
-        //     params: {},
-        //     headers: {
-        //         Authorization: 'Ghost eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjYzZWRjNTRlMTgxZjFhNDAyZjU5ZTljZiJ9.eyJpYXQiOjE2NzcyMjA3MzYsImV4cCI6MTY3NzIyMTAzNiwiYXVkIjoiL3YzL2FkbWluLyJ9.4SeDuQ32mKqrQ0wcRW47puXUo1j-9VCauN9CvVOqZlA',
-
-        //     }
-        // }
-
-
         const payload = {posts: [postData]};
-        console.log("GH".green, this.url + '/ghost/api/v3/admin/posts/?source=html', payload, this.config)
+        console.log("GH".green, this.url + '/ghost/api/admin/posts/?source=html', payload, this.config)
         const {data} = await axios.post(
-            this.url + '/ghost/api/v3/admin/posts/?source=html', payload, this.config
+            this.url + '/ghost/api/admin/posts/?source=html', payload, this.config
         );
+
+        console.dir(data, {depth: 15});
 
         return data;
     }
