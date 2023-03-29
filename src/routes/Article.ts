@@ -116,8 +116,6 @@ export class ArticleController {
         break;
       }
       case 'ghost': {
-        console.log("art", article.components);
-        console.log("content", content);
         await new Ghost(target.url, target.auth.key ?? '').publish(title, content)
         break;
       }

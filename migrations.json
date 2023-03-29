@@ -1,0 +1,9 @@
+{
+  "uri": "mongodb://127.0.0.1:27017/aic",
+  "useEnv": true,
+  "environment": {
+    "uriVar": "DATABASE_URL",
+    "databaseVar": "DATABASE_URL"
+  },
+  "migrationsDir": "migrations"
+}
