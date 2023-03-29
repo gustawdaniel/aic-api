@@ -29,7 +29,6 @@ export class GPT3 {
     async ask(messages: Gpt3Message[]): Promise<GptSimpleResponse> {
         const model = "gpt-3.5-turbo";
 
-        console.log(1);
         const existingAnswer = await prisma.ai_requests.findFirst({
             where: {
                 model,
@@ -37,7 +36,6 @@ export class GPT3 {
             }
         });
 
-        console.log(2);
         if (existingAnswer && existingAnswer.choices.length) {
             return {
                 message: existingAnswer.choices[0].message,
@@ -45,7 +43,6 @@ export class GPT3 {
             }
         }
 
-        console.log(3);
         const request = await prisma.ai_requests.create({
             data: {
                 model,

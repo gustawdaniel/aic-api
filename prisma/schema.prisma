@@ -55,16 +55,10 @@ model requests {
   articles    articles[]
 }
 
-type ComponentVersion {
-  replaced_at DateTime @default(now())
-  text        String
-}
-
 type Component {
   xpath         String[]
   text          String
-  finish_reason String             @default("")
-  versions      ComponentVersion[]
+  finish_reason String   @default("")
 }
 
 enum ArticleState {
@@ -81,16 +75,41 @@ type TargetAuthType {
   key      String?
 }
 
+enum OperationType {
+  add
+  remove
+  replace
+  move
+  copy
+  test
+}
+
+type Operation {
+  op    OperationType
+  from  Json?
+  path  String?
+  value Json?
+}
+
+type ArticleVersion {
+  hash       String
+  up         Operation[]
+  down       Operation[]
+  created_at DateTime    @default(now())
+}
+
 model articles {
   id                     String                @id @default(auto()) @map("_id") @db.ObjectId
+  hash                   String
   components             Component[]
   state                  ArticleState          @default(new)
   user                   users                 @relation(fields: [user_id], references: [id])
   user_id                String                @db.ObjectId
-  request                requests              @relation(fields: [request_id], references: [id], onDelete: Cascade)
-  request_id             String                @db.ObjectId
+  request                requests?             @relation(fields: [request_id], references: [id], onDelete: Cascade)
+  request_id             String?               @db.ObjectId
   processing_template    processing_templates? @relation(fields: [processing_template_id], references: [id])
   processing_template_id String?               @db.ObjectId
+  versions               ArticleVersion[]
 
   @@unique([id, user_id])
 }
@@ -111,6 +130,7 @@ model prompts {
   user    users  @relation(fields: [user_id], references: [id])
   user_id String @db.ObjectId
 
+  @@unique([id, user_id])
   @@unique([value, user_id])
 }
 

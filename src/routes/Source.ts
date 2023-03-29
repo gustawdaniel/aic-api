@@ -3,16 +3,19 @@ import {FastifyReply, FastifyRequest} from "fastify";
 import {SourceType} from "@prisma/client";
 import Url from 'url'
 
-function getType(type: string): SourceType {
+export function getType(type: string): SourceType {
     if(/https:\/\/businessinsider\.com\.pl/.test(type)) return SourceType.buisnesinsider;
     if(/(https:\/\/gustawdaniel\.com)|(https:\/\/preciselab\.io)/.test(type)) return SourceType.ghost;
     throw new Error(`Source ${type} not implemented`);
 }
 
-function fixUrl(url: string, type: SourceType): string {
+export function fixUrl(url: string, type: SourceType): string {
     switch (type) {
-        case SourceType.buisnesinsider: return Url.parse(url).href + '.feed';
-        case SourceType.ghost: return `https://${Url.parse(url).host}/news/rss`;
+        case SourceType.buisnesinsider: return Url.parse(url).href.replace(/\.feed$/,'') + '.feed';
+        case SourceType.ghost: {
+            const parsed = Url.parse(url);
+            return `https://${parsed.host ?? parsed.href}/news/rss`;
+        }
     }
 }
 
@@ -37,8 +40,6 @@ export class Source {
     static async create(req: FastifyRequest<{Body: {url: string}}>, reply: FastifyReply) {
         if(!req.user) return reply.unauthorized();
 
-        console.log("req.body", req.body);
-
         const type = getType(req.body.url);
         const url = fixUrl(req.body.url, type);
 
@@ -53,11 +54,16 @@ export class Source {
 
     static async remove(req: FastifyRequest<{Params: {id: string}}>, reply: FastifyReply) {
         if(!req.user) return reply.unauthorized();
-        return prisma.sources.deleteMany({
+        const {count} = await prisma.sources.deleteMany({
             where: {
                 id: req.params.id,
                 user_id: req.user.id
             }
-        })
+        });
+        if(count) {
+            return reply.status(200).send({count})
+        } else {
+            return reply.notFound()
+        }
     }
 }

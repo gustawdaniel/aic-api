@@ -1,7 +1,6 @@
 import {sleep} from "../functions/sleep";
 import {prisma} from "./prisma";
 import {GPT3} from "../functions/gpt";
-import dayjs from "dayjs";
 import {Component, processing_templates} from "@prisma/client";
 import {AsyncQueue} from '@gustawdaniel/async-queue'
 import {dispatchQueueProgress, ee} from "./event";
@@ -30,11 +29,6 @@ export interface DebugQueueItem {
     wait: number
 }
 
-export interface ArticleIdWithApiKey {
-    id: string
-    gpt3_api_key: string
-}
-
 const debugQueue = new AsyncQueue<DebugQueueItem>(async item => {
     console.log("queued".yellow, item);
     const steps = 50;
@@ -60,6 +54,7 @@ const debugQueue = new AsyncQueue<DebugQueueItem>(async item => {
 });
 
 export interface ProcessArticleQueueItem {
+    user_id: string,
     queue_id: string,
     progress: number
     gpt3_api_key: string
@@ -107,15 +102,14 @@ export const processArticleQueue = new AsyncQueue<ProcessArticleQueueItem>(async
                 {role: 'user', content: userMessage}
             ];
 
-            console.log(question);
-
             const {
                 message,
                 finish_reason
             } = await client.ask(question);
             console.log(userMessage.blue)
             console.log("[" + String(`${finish_reason}`.yellow) + "]" + String(`\t${message.content}`.green))
-            component.versions.push({text: component.text, replaced_at: dayjs().toDate()});
+            // TODO: fix
+            // component.versions.push({text: component.text, replaced_at: dayjs().toDate()});
             component.text = message.content;
             component.finish_reason = finish_reason;
         } else {
@@ -153,7 +147,6 @@ export const processArticleQueue = new AsyncQueue<ProcessArticleQueueItem>(async
 
 processArticleQueue.start();
 
-console.log("start");
 debugQueue.start();
 
 export {debugQueue}
@@ -176,6 +169,7 @@ export async function setupArticleQueue() {
 
     for (const article of articles) {
         await processArticleQueue.push({
+            user_id: article.user_id,
             article_id: article.id,
             gpt3_api_key: article.user.gpt3_api_key ?? '',
             queue_id: uid(),

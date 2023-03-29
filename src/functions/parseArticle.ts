@@ -76,8 +76,6 @@ export function parseArticle(html: string, type: SourceType): ArticleData {
                 element: 'h1'
             })
 
-            console.log(res);
-
             return {
                 title,
                 components: res.map(el => ({

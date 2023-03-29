@@ -58,12 +58,8 @@ describe('parseArticle', () => {
         const preWithDates = res.find(cmp => cmp.text.startsWith('2019-08-13'));
         expect(preWithDates).toBeDefined();
 
-        console.log(preWithDates);
-
         const preWithRust = res.find(cmp => cmp.xpath.includes('pre') && cmp.text.includes('use std::io;'))
         expect(preWithRust).toBeDefined();
-
-        console.log(preWithRust);
 
         expect(preWithRust?.text).toStrictEqual(`use linear_sort_reverse_search_rust_easy::reverse_search;
 use std::io;
@@ -71,7 +67,6 @@ use std::io;
 fn main() -> io::Result<()> {
     reverse_search(&mut io::stdin(), &mut io::stdout())
 }`);
-
 
         expect(res[res.length - 1].text).toContain('Screenshot from my console')
 

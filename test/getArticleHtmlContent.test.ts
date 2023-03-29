@@ -6,13 +6,11 @@ it('getArticleHtmlContent', () => {
             {
                 text: 'Hello world',
                 xpath: ['h1'],
-                versions: [],
                 finish_reason: 'stop'
             },
             {
                 text: 'I love you',
                 xpath: ['p'],
-                versions: [],
                 finish_reason: 'stop'
             }
         ]
@@ -27,13 +25,11 @@ it('getArticleHtmlContent with list', () => {
             {
                 text: 'Hello world',
                 xpath: ['h1'],
-                versions: [],
                 finish_reason: 'stop'
             },
             {
                 text: 'I love you',
                 xpath: ['li'],
-                versions: [],
                 finish_reason: 'stop'
             }
         ]
@@ -50,7 +46,6 @@ it('getArticleHtmlContent pre', () => {
             {
                 text: '1 + 2 = 3',
                 xpath: ['pre'],
-                versions: [],
                 finish_reason: 'stop'
             },
         ]

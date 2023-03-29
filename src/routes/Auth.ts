@@ -46,7 +46,7 @@ export class Auth {
                 token: tokenizeUser(user)
             };
         } catch (e) {
-            console.log("errr", e);
+            console.log("err", e);
             throw e;
         }
     }

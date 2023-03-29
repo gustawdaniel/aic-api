@@ -1,9 +1,10 @@
 import {GPT3} from "../functions/gpt";
 import {prisma} from "../storage/prisma";
 import {FastifyReply, FastifyRequest} from "fastify";
+import {Gpt3Message} from "../functions/backoff";
 
 export class Gpt3Controller {
-    static async ask(req: FastifyRequest<{Body: {text: string}}>, reply: FastifyReply) {
+    static async ask(req: FastifyRequest<{Body: {messages: Gpt3Message[]}}>, reply: FastifyReply) {
         if(!req.user) return reply.unauthorized();
 
         const user = await prisma.users.findUnique({
@@ -22,10 +23,7 @@ export class Gpt3Controller {
         const {
             message,
             finish_reason
-        } = await client.ask([{
-            role: 'user',
-            content: req.body.text
-        }]);
+        } = await client.ask(req.body.messages);
 
         return {
             message,

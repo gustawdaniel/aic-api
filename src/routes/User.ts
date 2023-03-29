@@ -1,7 +1,7 @@
 import {prisma} from "../storage/prisma";
 import {FastifyReply, FastifyRequest} from "fastify";
 
-export class User {
+export class UserController {
     static async list() {
         return prisma.users.findMany({})
     }
