@@ -7,11 +7,19 @@ services:
       - "4000:4000"
     env_file:
       - .env
-    entrypoint: ["/bin/sh","-c"]
+    entrypoint: [ "/bin/sh","-c" ]
     command:
       - |
         node migrations/index.js up
         node src/index.js
+
+  redis:
+    image: "redis:latest"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:
 
 networks:
   default:

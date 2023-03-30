@@ -93,7 +93,8 @@ export function getFastifyServer(): FastifyInstance {
   app.get('/article/:id', {preValidation: [auth]}, Article.one)
   app.put('/article/:id', {preValidation: [auth]}, Article.update)
   app.post('/article/:articleId/publish/:targetId', {preValidation: [auth]}, Article.publish)
-  app.delete('/article/:id', {preValidation: [auth]}, Article.delete)
+  app.delete('/article/:id', {preValidation: [auth]}, Article.delete);
+  app.get('/article-count-by-stata', {preValidation: [auth]}, Article.countByState)
 
   app.get('/user', {preValidation: [admin]}, User.list)
   app.get('/me', {preValidation: [auth]}, User.getMe)

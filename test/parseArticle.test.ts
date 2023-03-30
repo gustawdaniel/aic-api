@@ -68,7 +68,8 @@ fn main() -> io::Result<()> {
     reverse_search(&mut io::stdin(), &mut io::stdout())
 }`);
 
-        expect(res[res.length - 1].text).toContain('Screenshot from my console')
 
+
+        expect(res[res.length - 1].text).toContain('Screenshot from my console');
     })
 })

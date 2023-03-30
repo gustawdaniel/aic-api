@@ -1,4 +1,4 @@
-import { ArticleState, Component } from "@prisma/client";
+import { articles, ArticleState, Component, Prisma } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../storage/prisma";
 import { Wordpress } from "../platforms/Wordpress";
@@ -9,19 +9,22 @@ import { uid } from "uid";
 import { Article } from "../models/Article";
 import { createLinkHeader } from "../functions/createLinkHeader";
 
-
 export class ArticleController {
-  static async list(req: FastifyRequest<{ Querystring: { page?: number, limit?: number } }>, reply: FastifyReply) {
+  static async list(req: FastifyRequest<{ Querystring: { page?: number, limit?: number, state?: ArticleState } }>, reply: FastifyReply) {
     if (!req.user) return reply.unauthorized();
 
-    const page = req.query.page || 1;
-    const limit = req.query.limit || 500;
+    const page = Number(req.query.page || 1);
+    const limit = Number(req.query.limit || 10);
     const offset = (page - 1) * limit;
 
+    const where: Prisma.articlesWhereInput = {
+      user_id: req.user.id,
+      state: req.query.state
+    }
+
+
     const items = await prisma.articles.findMany({
-      where: {
-        user_id: req.user.id,
-      },
+      where,
       skip: offset,
       take: limit,
       include: {
@@ -35,15 +38,24 @@ export class ArticleController {
     });
 
     const totalCount = await prisma.articles.count({
-      where: {
-        user_id: req.user.id
-      }
+      where: {user_id: req.user.id}
     });
 
     return reply
       .header('Link', createLinkHeader(req.url, page, limit, totalCount))
       .header('Access-Control-Expose-Headers', 'Link')
       .send(items)
+  }
+
+  static async countByState(req: FastifyRequest, reply: FastifyReply) {
+    if (!req.user) return reply.unauthorized();
+    return prisma.articles.groupBy({
+      by: ['state'],
+      _count: {_all: true},
+      where: {
+        user_id: req.user.id
+      }
+    })
   }
 
   static async one(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {

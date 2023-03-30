@@ -75,12 +75,14 @@ export class Request {
 
       if (!article) {
         console.log("create", itemRequest.id);
-        await new Article(user).create({
-          data: {
-            request_id: itemRequest.id,
-            components: (itemRequest?.data as unknown as ArticleData).components,
-          }
-        })
+        if(itemRequest?.data) {
+          await new Article(user).create({
+            data: {
+              request_id: itemRequest.id,
+              components: (itemRequest?.data as unknown as ArticleData).components,
+            }
+          })
+        }
       }
     }
 

@@ -1,7 +1,7 @@
 import { getFastifyServer } from '../src/fastify';
 import { prisma } from '../src/storage/prisma';
 import { FastifyInstance, FastifyRequest } from "fastify";
-import { sources, SourceType } from "@prisma/client";
+import {  SourceType } from "@prisma/client";
 import { tokenizeUser } from "../src/functions/auth";
 
 // Mock data
