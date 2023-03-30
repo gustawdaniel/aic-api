@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 import {ArticleData} from "../interfaces/ArticleData";
-import {SourceType} from "@prisma/client";
+import { Component, SourceType } from "@prisma/client";
 
 function cleanText(tagName: string, text: string):string {
     if(['pre','code'.includes(tagName)]) return text;
@@ -48,10 +48,9 @@ export function parseArticle(html: string, type: SourceType): ArticleData {
 
             return {
                 title,
-                components: res.map(el => ({
+                components: res.map((el):Component => ({
                     text: el.text,
                     xpath: [el.element],
-                    versions: [],
                     finish_reason: ''
                 }))
             }
@@ -78,10 +77,9 @@ export function parseArticle(html: string, type: SourceType): ArticleData {
 
             return {
                 title,
-                components: res.map(el => ({
+                components: res.map((el):Component  => ({
                     text: el.text,
                     xpath: [el.element],
-                    versions: [],
                     finish_reason: ''
                 }))
             }

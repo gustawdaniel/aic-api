@@ -1,4 +1,4 @@
-import { ArticleState } from "@prisma/client";
+import { ArticleState, Component } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../storage/prisma";
 import { Wordpress } from "../platforms/Wordpress";
@@ -7,14 +7,23 @@ import { Ghost } from "../platforms/Ghost";
 import { processArticleQueue } from "../storage/queue";
 import { uid } from "uid";
 import { Article } from "../models/Article";
+import { createLinkHeader } from "../functions/createLinkHeader";
+
 
 export class ArticleController {
-  static async list(req: FastifyRequest, reply: FastifyReply) {
+  static async list(req: FastifyRequest<{ Querystring: { page?: number, limit?: number } }>, reply: FastifyReply) {
     if (!req.user) return reply.unauthorized();
-    return prisma.articles.findMany({
+
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 500;
+    const offset = (page - 1) * limit;
+
+    const items = await prisma.articles.findMany({
       where: {
         user_id: req.user.id,
       },
+      skip: offset,
+      take: limit,
       include: {
         request: {
           select: {
@@ -23,7 +32,18 @@ export class ArticleController {
           }
         }
       }
-    })
+    });
+
+    const totalCount = await prisma.articles.count({
+      where: {
+        user_id: req.user.id
+      }
+    });
+
+    return reply
+      .header('Link', createLinkHeader(req.url, page, limit, totalCount))
+      .header('Access-Control-Expose-Headers', 'Link')
+      .send(items)
   }
 
   static async one(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
@@ -44,7 +64,7 @@ export class ArticleController {
     })
   }
 
-  static async update(req: FastifyRequest<{ Body: { state: ArticleState, processing_template_id?: string, queue_id?: string }, Params: { id: string } }>, reply: FastifyReply) {
+  static async update(req: FastifyRequest<{ Body: { state: ArticleState, processing_template_id?: string, queue_id?: string, components?: Component[] }, Params: { id: string } }>, reply: FastifyReply) {
     if (!req.user) return reply.unauthorized();
 
     if (req.body.state === 'queued' && !req.body.processing_template_id) {
@@ -81,7 +101,8 @@ export class ArticleController {
     }
 
     return new Article(req.user).update(req.params.id, {
-      state: req.body.state
+      state: req.body.state,
+      components: req.body.components
     })
   }
 

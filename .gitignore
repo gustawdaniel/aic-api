@@ -4,3 +4,5 @@ node_modules
 SECRET.md
 .idea
 .env.prod
+scripts/aic.archive
+scripts/sync-db.sh
