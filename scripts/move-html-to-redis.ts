@@ -7,7 +7,9 @@ async function main() {
   let i = 0;
   for (const article of articles) {
     console.log(`processing ${i++}/${articles.length} - ${article.url}`);
+//@ts-ignore
     if (article.html) {
+      //@ts-ignore
       await redis.set(`html:${ hash(article.url) }`, article.html, 'EX', 3600 * 24 * 30 * 12 * 5); // 5 years
     }
   }

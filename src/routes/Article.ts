@@ -1,4 +1,4 @@
-import {  ArticleState, Component, Prisma } from "@prisma/client";
+import { ArticleState, Component, Prisma } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../storage/prisma";
 import { Wordpress } from "../platforms/Wordpress";
@@ -9,8 +9,32 @@ import { uid } from "uid";
 import { Article } from "../models/Article";
 import { createLinkHeader } from "../functions/createLinkHeader";
 
+type ArticleSortType = 'id_desc' | 'id_asc' | 'title_asc';
+
 export class ArticleController {
-  static async list(req: FastifyRequest<{ Querystring: { page?: number, limit?: number, state?: ArticleState, search?: string } }>, reply: FastifyReply) {
+  private static orderBy(sort: ArticleSortType | undefined): Prisma.Enumerable<Prisma.articlesOrderByWithRelationInput> | undefined {
+    switch (sort) {
+      case 'id_asc':
+        return {
+          id: 'asc'
+        }
+      case 'id_desc': {
+        return {
+          id: 'desc'
+        }
+      }
+      case 'title_asc': {
+        return {
+          title: 'asc'
+        }
+      }
+      default:
+        return undefined
+    }
+
+  }
+
+  static async list(req: FastifyRequest<{ Querystring: { page?: number, limit?: number, state?: ArticleState, search?: string, sort?: ArticleSortType } }>, reply: FastifyReply) {
     if (!req.user) return reply.unauthorized();
 
     const page = Number(req.query.page || 1);
@@ -27,11 +51,13 @@ export class ArticleController {
         {source_url: {contains: req.query.search, mode: 'insensitive'}},
       ]
     }
+    const orderBy = ArticleController.orderBy(req.query.sort);
 
     const items = await prisma.articles.findMany({
       where,
       skip: offset,
       take: limit,
+      orderBy,
       include: {
         request: {
           select: {
