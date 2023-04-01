@@ -9,7 +9,7 @@ import { uid } from "uid";
 import { Article } from "../models/Article";
 import { createLinkHeader } from "../functions/createLinkHeader";
 
-type ArticleSortType = 'id_desc' | 'id_asc' | 'title_asc';
+type ArticleSortType = 'id_desc' | 'id_asc' | 'title_asc' | 'components_asc' | 'components_desc';
 
 export class ArticleController {
   private static orderBy(sort: ArticleSortType | undefined): Prisma.Enumerable<Prisma.articlesOrderByWithRelationInput> | undefined {
@@ -28,10 +28,36 @@ export class ArticleController {
           title: 'asc'
         }
       }
+      case 'components_asc': {
+        return {
+          components: {
+            _count: 'asc'
+          }
+        }
+      }
+      case 'components_desc': {
+        return {
+          components: {
+            _count: 'desc'
+          }
+        }
+      }
       default:
         return undefined
     }
 
+  }
+
+  static compressArticles(items: { components: Component[], state: ArticleState, id: string, title: string, source_url: string }[]) {
+    return items.map((item) => {
+      return {
+        state: item.state,
+        id: item.id,
+        title: item.title,
+        source_url: item.source_url,
+        components_length: item.components.length
+      }
+    })
   }
 
   static async list(req: FastifyRequest<{ Querystring: { page?: number, limit?: number, state?: ArticleState, search?: string, sort?: ArticleSortType } }>, reply: FastifyReply) {
@@ -58,15 +84,24 @@ export class ArticleController {
       skip: offset,
       take: limit,
       orderBy,
-      include: {
-        request: {
-          select: {
-            url: true,
-            created_at: true
-          }
-        }
+      // include: {
+      //   request: {
+      //     select: {
+      //       url: true,
+      //       created_at: true
+      //     }
+      //   }
+      // },
+      select: {
+        id: true,
+        title: true,
+        state: true,
+        source_url: true,
+        components: true
       }
     });
+
+    const compressedItems = ArticleController.compressArticles(items);
 
     const totalCount = await prisma.articles.count({
       where
@@ -75,7 +110,7 @@ export class ArticleController {
     return reply
       .header('Link', createLinkHeader(req.url, page, limit, totalCount))
       .header('Access-Control-Expose-Headers', 'Link')
-      .send(items)
+      .send(compressedItems)
   }
 
   static async countByState(req: FastifyRequest<{ Querystring: { search?: string } }>, reply: FastifyReply) {

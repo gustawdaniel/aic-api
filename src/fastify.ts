@@ -17,6 +17,7 @@ import { ee } from "./storage/event";
 import { Queue } from "./routes/Queue";
 import { Gpt3Context } from "./routes/Gpt3Context";
 import { Gpt3Prompt } from "./routes/Gpt3Prompt";
+import { Health } from "./routes/Health";
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -76,6 +77,7 @@ export function getFastifyServer(): FastifyInstance {
   // - hooks
   // - middlewares
   app.get('/', Version.root)
+  app.get('/health', Health.root)
 
   app.get('/source', {preValidation: [auth]}, Source.list)
   app.post('/source', {preValidation: [auth]}, Source.create)
