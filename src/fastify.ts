@@ -1,4 +1,4 @@
-import fastify, { errorCodes, FastifyInstance } from "fastify";
+import fastify, { FastifyInstance } from "fastify";
 import { Auth } from "./routes/Auth";
 import cors from '@fastify/cors'
 import { Source } from "./routes/Source";
@@ -10,7 +10,6 @@ import { Version } from "./routes/Version";
 import { UserController as User } from "./routes/User";
 import { ProcessingTemplate } from "./routes/ProcessingTemplate";
 import { Target } from "./routes/Target";
-import { AxiosError } from "axios";
 import { Gpt3Controller as Gpt3 } from "./routes/Gpt3";
 import websocket from '@fastify/websocket';
 import { ee } from "./storage/event";
@@ -18,10 +17,14 @@ import { Queue } from "./routes/Queue";
 import { Gpt3Context } from "./routes/Gpt3Context";
 import { Gpt3Prompt } from "./routes/Gpt3Prompt";
 import { Health } from "./routes/Health";
+import { serverTimingStart } from "./hooks/serverTimingStart";
+import { serverTimingEnd } from "./hooks/serverTimingEnd";
+import {  errorHandlerGenerator } from "./hooks/errorHandler";
 
 declare module 'fastify' {
   interface FastifyRequest {
-    user: JWTUser | null
+    user: JWTUser | null,
+    serverTimingStart: [number, number]
   }
 }
 
@@ -54,23 +57,10 @@ export function getFastifyServer(): FastifyInstance {
   app.register(cors)
   app.register(fastifySensible)
 
-  app.setErrorHandler(function (error, request, reply) {
-    if (error instanceof errorCodes.FST_ERR_BAD_STATUS_CODE) {
-      // Log error
-      this.log.error(error)
-      // Send error response
-      reply.status(500).send({ok: false})
-    } else {
-      if (error instanceof AxiosError) {
-        console.log("ZZ > req".red, error.request.headers, error.request.url, error.request.method, error.request.data)
-        console.log("ZZ > res".red, error.response?.status, error.response?.data, error.response?.headers)
-      } else {
-        console.log("XX".red, error)
-      }
-      // fastify will use parent error handler to handle this
-      reply.send(error)
-    }
-  })
+  app.addHook('onRequest', serverTimingStart);
+  app.addHook('onSend', serverTimingEnd);
+
+  app.setErrorHandler(errorHandlerGenerator(app))
 
   // there add
   // - endpoints
