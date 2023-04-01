@@ -2,12 +2,14 @@ import { FastifyReply, FastifyRequest } from "fastify";
 
 import { prisma } from "../storage/prisma";
 import 'colors-cli/toxic'
-import { Component, RequestType, SourceType } from "@prisma/client";
+import {  RequestType, SourceType } from "@prisma/client";
 import dayjs from "dayjs";
 import { getListRequest } from "../functions/getListRequest";
 import { getAndParseArticle } from "../functions/getAndParseArticle";
 import { ArticleData } from "../interfaces/ArticleData";
 import { Article } from "../models/Article";
+import { redis } from "../storage/ioredis";
+import hash from "object-hash";
 
 export class Request {
   static async inject(req: FastifyRequest<{ Body: { source_id: string } }>, reply: FastifyReply) {
@@ -51,13 +53,14 @@ export class Request {
       const {data, html} = await getAndParseArticle(url, source.type);
       console.log(`new request in ${ dayjs().diff(s) }ms`.blue);
       console.log(data)
+
+      redis.set(`html:${ hash(url) }`, html, 'EX', 3600 * 24 * 30 * 12 * 5); // 5 years
       itemRequest = await prisma.requests.update({
         where: {
           id: itemRequest.id
         },
         data: {
-          data: JSON.parse(JSON.stringify(data)),
-          html
+          data: JSON.parse(JSON.stringify(data))
         }
       });
 

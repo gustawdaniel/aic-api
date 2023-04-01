@@ -1,8 +1,9 @@
 import { prisma } from "../storage/prisma";
-import { articles, Prisma, users } from "@prisma/client";
+import { articles, Component, Prisma, users } from "@prisma/client";
 import { createPatch, applyPatch, Operation as RfcOperation } from 'rfc6902'
 import assert from "node:assert";
 import hash from 'object-hash';
+import { getArticleTitle } from "../functions/getArticleTitle";
 
 type ArticlePayload = Pick<Prisma.articlesUncheckedCreateInput, 'request_id' | 'components' | 'user_id' | 'state'>;
 
@@ -26,6 +27,16 @@ export class Article {
     }
   }
 
+  static async getSourceUlr(requestId: string | null | undefined): Promise<string> {
+    if (!requestId) return '';
+    const request = await prisma.requests.findUnique({
+      where: {
+        id: requestId
+      }
+    })
+    return request ? request.url : '';
+  }
+
   async create({data}: { data: Pick<Prisma.XOR<Prisma.articlesCreateInput, Prisma.articlesUncheckedCreateInput>, 'request_id' | 'components'> }) {
     const payload: Pick<Prisma.articlesUncheckedCreateInput, 'request_id' | 'components' | 'user_id' | 'state'> = {
       user_id: this.user_id,
@@ -37,6 +48,8 @@ export class Article {
     return prisma.articles.create({
       data: {
         ...payload,
+        title: getArticleTitle({components: data.components as Component[]}),
+        source_url: await Article.getSourceUlr(data.request_id),
         hash: Article.computeHash(payload),
         versions: {
           hash: Article.computeHash(payload),
@@ -102,6 +115,7 @@ export class Article {
       },
       data: {
         hash,
+        title: getArticleTitle({components: fresh.components as Component[]}),
         state: fresh.state,
         components: fresh.components,
         versions: {

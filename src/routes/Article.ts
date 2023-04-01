@@ -1,4 +1,4 @@
-import { articles, ArticleState, Component, Prisma } from "@prisma/client";
+import {  ArticleState, Component, Prisma } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../storage/prisma";
 import { Wordpress } from "../platforms/Wordpress";
@@ -10,7 +10,7 @@ import { Article } from "../models/Article";
 import { createLinkHeader } from "../functions/createLinkHeader";
 
 export class ArticleController {
-  static async list(req: FastifyRequest<{ Querystring: { page?: number, limit?: number, state?: ArticleState } }>, reply: FastifyReply) {
+  static async list(req: FastifyRequest<{ Querystring: { page?: number, limit?: number, state?: ArticleState, search?: string } }>, reply: FastifyReply) {
     if (!req.user) return reply.unauthorized();
 
     const page = Number(req.query.page || 1);
@@ -21,7 +21,12 @@ export class ArticleController {
       user_id: req.user.id,
       state: req.query.state
     }
-
+    if (req.query.search) {
+      where.OR = [
+        {title: {contains: req.query.search, mode: 'insensitive'}},
+        {source_url: {contains: req.query.search, mode: 'insensitive'}},
+      ]
+    }
 
     const items = await prisma.articles.findMany({
       where,
@@ -38,7 +43,7 @@ export class ArticleController {
     });
 
     const totalCount = await prisma.articles.count({
-      where: {user_id: req.user.id}
+      where
     });
 
     return reply
@@ -47,14 +52,21 @@ export class ArticleController {
       .send(items)
   }
 
-  static async countByState(req: FastifyRequest, reply: FastifyReply) {
+  static async countByState(req: FastifyRequest<{ Querystring: { search?: string } }>, reply: FastifyReply) {
     if (!req.user) return reply.unauthorized();
+    const where: Prisma.articlesWhereInput = {
+      user_id: req.user.id,
+    }
+    if (req.query.search) {
+      where.OR = [
+        {title: {contains: req.query.search, mode: 'insensitive'}},
+        {source_url: {contains: req.query.search, mode: 'insensitive'}},
+      ]
+    }
     return prisma.articles.groupBy({
       by: ['state'],
       _count: {_all: true},
-      where: {
-        user_id: req.user.id
-      }
+      where
     })
   }
 

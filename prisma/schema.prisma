@@ -46,7 +46,6 @@ model requests {
   source_id   String      @db.ObjectId
   response_at DateTime?
   error       String?
-  html        String?
   data        Json?
   url         String
   code        Int?
@@ -101,6 +100,8 @@ type ArticleVersion {
 model articles {
   id                     String                @id @default(auto()) @map("_id") @db.ObjectId
   hash                   String
+  title                  String
+  source_url             String
   components             Component[]
   state                  ArticleState          @default(new)
   user                   users                 @relation(fields: [user_id], references: [id])
