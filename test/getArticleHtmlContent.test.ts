@@ -1,55 +1,58 @@
-import {getArticleHtmlContent} from "../src/functions/getArticleTitle";
+import { getArticleHtmlContent } from "../src/functions/getArticleTitle";
 
-it('getArticleHtmlContent', () => {
+describe('articles', () => {
+  it('getArticleHtmlContent', () => {
     const content = getArticleHtmlContent({
-        components: [
-            {
-                text: 'Hello world',
-                xpath: ['h1'],
-                finish_reason: 'stop'
-            },
-            {
-                text: 'I love you',
-                xpath: ['p'],
-                finish_reason: 'stop'
-            }
-        ]
+      components: [
+        {
+          text: 'Hello world',
+          xpath: ['h1'],
+          finish_reason: 'stop'
+        },
+        {
+          text: 'I love you',
+          xpath: ['p'],
+          finish_reason: 'stop'
+        }
+      ]
     });
 
     expect(content).toEqual(`<html><head></head><body><article><p>I love you</p></article></body></html>`)
-})
+  })
 
-it('getArticleHtmlContent with list', () => {
+  it('getArticleHtmlContent with list', () => {
     const content = getArticleHtmlContent({
-        components: [
-            {
-                text: 'Hello world',
-                xpath: ['h1'],
-                finish_reason: 'stop'
-            },
-            {
-                text: 'I love you',
-                xpath: ['li'],
-                finish_reason: 'stop'
-            }
-        ]
+      components: [
+        {
+          text: 'Hello world',
+          xpath: ['h1'],
+          finish_reason: 'stop'
+        },
+        {
+          text: 'I love you',
+          xpath: ['li'],
+          finish_reason: 'stop'
+        }
+      ]
     });
 
     expect(content).toEqual(`<html><head></head><body><article><ul><li>I love you</li></ul></article></body></html>`)
-})
+  })
 
 
-
-it('getArticleHtmlContent pre', () => {
+  it('getArticleHtmlContent pre', () => {
     const content = getArticleHtmlContent({
-        components: [
-            {
-                text: '1 + 2 = 3',
-                xpath: ['pre'],
-                finish_reason: 'stop'
-            },
-        ]
+      components: [
+        {
+          text: '1 + 2 = 3',
+          xpath: ['pre'],
+          finish_reason: 'stop'
+        },
+      ]
     });
 
     expect(content).toEqual(`<html><head></head><body><article><pre><code>1 + 2 = 3</code></pre></article></body></html>`)
+  })
+
+
 })
