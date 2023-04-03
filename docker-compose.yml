@@ -18,21 +18,8 @@ services:
     volumes:
       - redis_data:/data
 
-  mongo:
-    image: mongo:6
-    command: mongod --storageEngine=wiredTiger --replSet rs0
-    volumes:
-      - mongo_data:/data/db
-
-  mongo-init-replica:
-    image: mongo:4.4
-    depends_on:
-      - mongo
-    command: bash -c "sleep 10 && mongo --host mongo --eval 'rs.initiate()'"
-
 volumes:
   redis_data:
-  mongo_data:
 
 networks:
   default:

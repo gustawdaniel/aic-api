@@ -12,7 +12,7 @@ export class Token1680065214080 implements MigrationInterface {
     for (const a of articles) {
       await new Article({id: String(a.user_id)}).create({
         data: {
-          components: a.components.map((c: Component): Component => ({
+          components: a.components.map((c: Component): unknown => ({
             text: c.text,
             finish_reason: c.finish_reason,
             xpath: c.xpath

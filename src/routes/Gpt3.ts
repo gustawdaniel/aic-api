@@ -22,7 +22,7 @@ export class Gpt3Controller {
 
         const {
             message,
-            finish_reason
+            finish_reason,
         } = await client.ask(req.body.messages);
 
         return {

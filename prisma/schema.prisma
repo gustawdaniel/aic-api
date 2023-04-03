@@ -55,9 +55,11 @@ model requests {
 }
 
 type Component {
+  id            String
   xpath         String[]
   text          String
   finish_reason String   @default("")
+  ai_requests   String[] @default([]) @db.ObjectId
 }
 
 enum ArticleState {
