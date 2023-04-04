@@ -11,7 +11,7 @@ export async function getListRequest(user: JWTUser, source: sources): Promise<re
             type: RequestType.list,
             source_id: source.id,
             created_at: {
-                gte: dayjs().subtract(6, 'h').toDate()
+                gte: dayjs().subtract(15, 'minutes').toDate()
             }
         }
     })
