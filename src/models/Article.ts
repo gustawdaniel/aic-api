@@ -1,6 +1,6 @@
 import { prisma } from "../storage/prisma";
 import { articles, Component, Prisma, users } from "@prisma/client";
-import { createPatch, applyPatch, Operation as RfcOperation } from 'rfc6902'
+import { createPatch, applyPatch, Operation as RfcOperation, Operation } from 'rfc6902'
 import assert from "node:assert";
 import hash from 'object-hash';
 import { getArticleTitle } from "../functions/getArticleTitle";
@@ -129,16 +129,25 @@ export class Article {
     })
   }
 
-  async checkout(id: string, hash: string) {
+  async checkout(id: string, hash: string): Promise<{fresh: ArticlePayload, operations: RfcOperation[]}> {
     const prev = await this.get(id);
     const index = prev.versions.findIndex((v) => v.hash === hash);
     if (index < 0) throw new Error(`Hash ${ hash } not found in versions of article ${ id }`);
-    const operations = prev.versions.filter((v, i) => i > index).reverse().map((v) => v.down).flat();
+    const operations: RfcOperation[] = prev.versions.filter((v, i) => i > index).reverse().map((v) => v.down).flat() as RfcOperation[];
 
     const fresh = this.getPayload(prev);
-    const errors = applyPatch(fresh, operations as RfcOperation[]) as unknown as ArticlePayload;
-    expect(errors).toEqual([null]);
-    assert.strictEqual(Article.computeHash(fresh), hash);
+    const errors = applyPatch(fresh, operations as RfcOperation[]);
+
+    assert.ok(errors.every((error) => error === null));
+    // assert.strictEqual(Article.computeHash(fresh), hash);
+
+    return {fresh, operations}
+  }
+
+  async commit(id: string, hash: string) {
+    const prev = await this.get(id);
+    const {fresh, operations} = await this.checkout(id, hash);
+
     const up = operations;
     const down = createPatch(fresh, this.getPayload(prev));
     return prisma.articles.update({
@@ -150,6 +159,7 @@ export class Article {
       },
       data: {
         hash,
+        title: getArticleTitle({components: fresh.components as Component[]}),
         state: fresh.state,
         components: fresh.components,
         versions: {

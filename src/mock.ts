@@ -1,9 +1,12 @@
 import fastify from "fastify";
+import { sleep } from "./functions/sleep";
 
 async function main() {
   const app = fastify();
 
   app.post('/openai/v1/chat/completions', async () => {
+    await sleep(2000)
+
     return {
       "id": "chatcmpl-71QnEMDFR8JCGRz8fTJOCCFW7gKRc",
       "object": "chat.completion",

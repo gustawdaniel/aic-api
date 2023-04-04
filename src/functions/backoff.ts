@@ -75,8 +75,7 @@ export async function backoff(apiKey: string, messages: Gpt3Message[]): Promise<
     } catch (error: any) {
       if (!retryOn.includes(error.response?.status)) {
         console.error('axios'.red, error)
-        console.error('res.data'.red, error.response.data)
-        throw error;
+        throw errorDetailsFromResponseBody(error);
       } else if (error instanceof AxiosError) {
         logAxiosErrorToConsole(error);
       }

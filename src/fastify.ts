@@ -83,7 +83,9 @@ export function getFastifyServer(): FastifyInstance {
 
   app.get('/article', {preValidation: [auth]}, Article.list)
   app.get('/article/:id', {preValidation: [auth]}, Article.one)
+  app.get('/article/:id/version/:hash', {preValidation: [auth]}, Article.getVersion)
   app.put('/article/:id', {preValidation: [auth]}, Article.update)
+  app.put('/article/:id/version/:hash', {preValidation: [auth]}, Article.updateVersion)
   app.post('/article/:articleId/publish/:targetId', {preValidation: [auth]}, Article.publish)
   app.delete('/article/:id', {preValidation: [auth]}, Article.delete);
   app.get('/article-count-by-stata', {preValidation: [auth]}, Article.countByState)
@@ -94,6 +96,7 @@ export function getFastifyServer(): FastifyInstance {
 
   // gpt3
   app.post('/ask', {preValidation: [auth]}, Gpt3.ask)
+  app.get('/ai-request', {preValidation: [auth]}, Gpt3.getAiRequest)
 
   app.post('/google-verify', Auth.googleVerify)
   app.post('/impersonate', {preValidation: [admin]}, Auth.impersonate)

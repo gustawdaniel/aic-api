@@ -85,7 +85,7 @@ describe('article evolution', () => {
 
     const initialHash = updatedArticle.versions[0].hash;
 
-    await new Article({id: mongoStringFromSeed("1")}).checkout(article.id, initialHash);
+    await new Article({id: mongoStringFromSeed("1")}).commit(article.id, initialHash);
 
     const finalArticle = await prisma.articles.findUnique({where: {id: article.id}});
     expect(finalArticle).not.toBeNull();

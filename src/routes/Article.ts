@@ -8,6 +8,8 @@ import { processArticleQueue } from "../storage/queue";
 import { uid } from "uid";
 import { Article } from "../models/Article";
 import { createLinkHeader } from "../functions/createLinkHeader";
+import { applyPatch } from "rfc6902";
+import { mongoStringFromSeed } from "../storage/mongo";
 
 type ArticleSortType = 'id_desc' | 'id_asc' | 'title_asc' | 'components_asc' | 'components_desc';
 
@@ -133,10 +135,12 @@ export class ArticleController {
 
   static async one(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
     if (!req.user) return reply.unauthorized();
-    return prisma.articles.findFirst({
+    return prisma.articles.findUnique({
       where: {
-        id: req.params.id,
-        user_id: req.user.id
+        id_user_id: {
+          id: req.params.id,
+          user_id: req.user.id
+        }
       },
       include: {
         request: {
@@ -149,7 +153,60 @@ export class ArticleController {
     })
   }
 
-  static async update(req: FastifyRequest<{ Body: { state: ArticleState, processing_template_id?: string, queue_id?: string, components?: Component[] }, Params: { id: string } }>, reply: FastifyReply) {
+  // a 0
+  // b 1
+  // c 2
+  // d 3
+
+  static async validateVersionRequest(req: FastifyRequest<{ Params: { id: string, hash: string } }>, reply: FastifyReply) {
+    if (!req.user) return reply.unauthorized();
+    const article = await prisma.articles.findUnique({
+      where: {
+        id_user_id: {
+          id: req.params.id,
+          user_id: req.user.id
+        }
+      },
+    });
+
+    if (!article) return reply.notFound(`Article ${ req.params.id } not found`);
+
+    const versionIndex = article.versions.findIndex((version) => version.hash === req.params.hash);
+
+    if (versionIndex === -1) return reply.notFound(`Version ${ req.params.hash } not found`);
+
+  }
+
+  static async getVersion(req: FastifyRequest<{ Params: { id: string, hash: string } }>, reply: FastifyReply) {
+    if (!req.user) return reply.unauthorized();
+
+    await ArticleController.validateVersionRequest(req, reply);
+
+    const articleModel = new Article(req.user);
+
+    const {fresh} = await articleModel.checkout(req.params.id, req.params.hash);
+
+    return fresh;
+  }
+
+  static async updateVersion(req: FastifyRequest<{ Params: { id: string, hash: string } }>, reply: FastifyReply) {
+    if (!req.user) return reply.unauthorized();
+    await ArticleController.validateVersionRequest(req, reply);
+
+    await new Article({id: req.user.id}).commit(req.params.id, req.params.hash);
+
+    return ArticleController.one(req, reply);
+  }
+
+  static async update(
+    req: FastifyRequest<{
+      Body: {
+        state: ArticleState,
+        processing_template_id?: string,
+        queue_id?: string,
+        components?: Component[]
+      }, Params: { id: string }
+    }>, reply: FastifyReply) {
     if (!req.user) return reply.unauthorized();
 
     if (req.body.state === 'queued' && !req.body.processing_template_id) {
