@@ -1,6 +1,11 @@
 import { errorCodes, FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { AxiosError } from "axios";
 
+export function logAxiosErrorToConsole(error: AxiosError) {
+  console.log("ZZ > req".red, error.request.headers, error.request.url, error.request.method, error.request.data)
+  console.log("ZZ > res".red, error.response?.status, error.response?.data, error.response?.headers)
+}
+
 export function errorHandlerGenerator(app: FastifyInstance) {
   function errorHandler(error: FastifyError, request: FastifyRequest, reply: FastifyReply) {
     if (error instanceof errorCodes.FST_ERR_BAD_STATUS_CODE) {
@@ -10,8 +15,7 @@ export function errorHandlerGenerator(app: FastifyInstance) {
       reply.status(500).send({ok: false})
     } else {
       if (error instanceof AxiosError) {
-        console.log("ZZ > req".red, error.request.headers, error.request.url, error.request.method, error.request.data)
-        console.log("ZZ > res".red, error.response?.status, error.response?.data, error.response?.headers)
+        logAxiosErrorToConsole(error);
       } else {
         console.log("XX".red, error)
       }

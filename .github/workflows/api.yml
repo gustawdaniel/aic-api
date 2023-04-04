@@ -28,6 +28,7 @@ jobs:
       - name: prepare env
         run: |
           ENV=$(cat << EOF
+          OPEN_AI_URL=https://api.openai.com
           VIRTUAL_HOST=api.aic.preciselab.io
           LETSENCRYPT_HOST=api.aic.preciselab.io
           VIRTUAL_PORT=3000

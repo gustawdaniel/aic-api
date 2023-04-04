@@ -4,7 +4,7 @@ import axios from "axios";
 
 const options = {
     method: 'POST',
-    url: 'https://api.openai.com/v1/chat/completions',
+    url: process.env.OPEN_AI_URL + '/v1/chat/completions',
     headers: {
         'Content-Type': 'application/json',
         Authorization: 'Bearer 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'

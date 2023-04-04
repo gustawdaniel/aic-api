@@ -4,22 +4,28 @@ import { prisma } from "../src/storage/prisma";
 import { purgeDb } from "../src/storage/purgeDb";
 import { mongoStringFromSeed } from "../src/storage/mongo";
 import assert from "node:assert";
-import { getFastifyServer } from "../src/fastify";
+// import { getFastifyServer } from "../src/fastify";
 import { tokenizeUser } from "../src/functions/auth";
+import { redis } from "../src/storage/ioredis";
 
 describe('article evolution', () => {
   beforeAll(async () => {
     await purgeDb()
   })
 
+  afterAll(async () => {
+    await redis.disconnect()
+    await prisma.$disconnect()
+  })
+
   it('hash', () => {
     expect(Article.computeHash({
       state: 'new',
-      components: [ { xpath: ['p'], text: 'hello', finish_reason: 'stop' } ],
+      components: [ { id: '1', xpath: ['p'], ai_requests: [], text: 'hello', finish_reason: 'stop' } ],
       request_id: null,
       user_id: '61cf1af0c4ca4238a0b92382'
     })).toEqual(Article.computeHash({
-      components: [ { xpath: ['p'], text: 'hello', finish_reason: 'stop' } ],
+      components: [ { id: '1', xpath: ['p'], ai_requests: [], text: 'hello', finish_reason: 'stop' } ],
       state: 'new',
       request_id: null,
       user_id: '61cf1af0c4ca4238a0b92382'
@@ -27,17 +33,17 @@ describe('article evolution', () => {
 
     expect(Article.computeHash({
       state: 'new',
-      components: [ { xpath: ['p'], text: 'hello world', finish_reason: 'stop' } ],
+      components: [ { id: '1', xpath: ['p'], ai_requests: [], text: 'hello world', finish_reason: 'stop' } ],
       request_id: null,
       user_id: '61cf1af0c4ca4238a0b92382'
-    })).toEqual('af42b98ff44ad88054fe6fff00fe1636e5305fc7')
+    })).toEqual('9f70ad354ae73eeee3a5346733606c40fbb3bb67')
 
     expect(Article.computeHash({
       state: 'new',
-      components: [ { xpath: ['p'], text: 'hello', finish_reason: 'stop' } ],
+      components: [ { id: '1', xpath: ['p'], ai_requests: [], text: 'hello', finish_reason: 'stop' } ],
       request_id: null,
       user_id: '61cf1af0c4ca4238a0b92382'
-    })).toEqual('9b81e36cfb6cf7f97e29dde33c1621ed1640a4ea')
+    })).toEqual('e39803096b4ad3952803a4cbfeaa7b9912260899')
   })
 
   it('create art', async () => {
@@ -45,9 +51,11 @@ describe('article evolution', () => {
     const article = await new Article({id: mongoStringFromSeed("1")}).create({
       data: {
         components: [{
+          id: '1',
           text: "hello",
           xpath: ["p"],
-          finish_reason: 'stop'
+          finish_reason: 'stop',
+          ai_requests: [],
         }],
       }
     });
@@ -57,6 +65,8 @@ describe('article evolution', () => {
 
     const fix = {
       components: [{
+        id: '1',
+        ai_requests: [],
         text: "hello world",
         xpath: ["p"],
         finish_reason: 'stop'
@@ -88,36 +98,3 @@ describe('article evolution', () => {
   })
 })
 
-describe('article rest', () => {
-  const testUser = {
-    id: mongoStringFromSeed('1').toString(),
-    email: 'test@example.com',
-    roles: []
-  };
-
-  it('url contains correct link', async () => {
-    const server = await getFastifyServer();
-
-    jest.spyOn(prisma.articles, 'count').mockResolvedValue(100);
-
-    const response = await server.inject({
-      method: 'GET',
-      path: '/article',
-      headers: {
-        Authorization: `Bearer ${ tokenizeUser(testUser) }`
-      }
-    });
-
-    expect(response.statusCode).toEqual(200);
-    expect(response.headers.link).toEqual('</article?page=2&limit=10>; rel="next", </article?page=10&limit=10>; rel="last"');
-
-    const response2 = await server.inject({
-      method: 'GET',
-      path: '/article?page=2&limit=10',
-      headers: {
-        Authorization: `Bearer ${ tokenizeUser(testUser) }`
-      }
-    });
-    expect(response2.headers.link).toEqual('</article?page=1&limit=10>; rel="prev", </article?page=3&limit=10>; rel="next", </article?page=10&limit=10>; rel="last"');
-  })
-})

@@ -5,14 +5,18 @@ describe('articles', () => {
     const content = getArticleHtmlContent({
       components: [
         {
+          id: '1',
           text: 'Hello world',
           xpath: ['h1'],
-          finish_reason: 'stop'
+          finish_reason: 'stop',
+          ai_requests: [],
         },
         {
+          id: '2',
           text: 'I love you',
           xpath: ['p'],
-          finish_reason: 'stop'
+          finish_reason: 'stop',
+          ai_requests: [],
         }
       ]
     });
@@ -24,14 +28,18 @@ describe('articles', () => {
     const content = getArticleHtmlContent({
       components: [
         {
+          id: '1',
           text: 'Hello world',
           xpath: ['h1'],
-          finish_reason: 'stop'
+          finish_reason: 'stop',
+          ai_requests: [],
         },
         {
+          id: '2',
           text: 'I love you',
           xpath: ['li'],
-          finish_reason: 'stop'
+          finish_reason: 'stop',
+          ai_requests: [],
         }
       ]
     });
@@ -44,9 +52,11 @@ describe('articles', () => {
     const content = getArticleHtmlContent({
       components: [
         {
+          id: '1',
           text: '1 + 2 = 3',
           xpath: ['pre'],
-          finish_reason: 'stop'
+          finish_reason: 'stop',
+          ai_requests: [],
         },
       ]
     });

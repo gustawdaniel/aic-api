@@ -4,6 +4,8 @@ import { SourceType } from "@prisma/client";
 import { expect, describe, it } from "@jest/globals";
 
 describe('parseArticle', () => {
+
+
   it('business insider', () => {
     const html = fs.readFileSync(__dirname + '/bi.article.html').toString()
     expect(typeof html).toEqual('string');
@@ -28,6 +30,8 @@ describe('parseArticle', () => {
     expect(allText).not.toContain('Więcej takich informacji')
     expect(allText).not.toContain('Czytaj także w BUSINESS INSIDER')
     expect(allText).not.toContain('Dalsza część artykułu')
+    expect(allText).not.toContain('Zobacz także')
+    expect(allText).not.toContain('Zobacz też')
   });
 
   it('main title in business insider', () => {
@@ -36,7 +40,7 @@ describe('parseArticle', () => {
     expect(typeof html).toEqual('string');
     const article = parseArticle(html, SourceType.buisnesinsider);
     expect(article.title).toEqual('Opinia rzecznika TSUE jest wewnętrznie sprzeczna. Prawnik banków: poczekajmy na wyrok')
-  })
+  });
 
   it('ghost', () => {
     const html = fs.readFileSync(__dirname + '/gh.article.html').toString()
@@ -81,5 +85,7 @@ fn main() -> io::Result<()> {
     expect(article.components.some(c => c.text.startsWith('Dalsza część artykułu'))).toBeFalsy();
     expect(article.components.some(c => c.text.startsWith('Zobacz także: Lotnisko w Radomiu. LOT uruchomił sprzedaż biletów. Podał datę pierwszego rejsu'))).toBeFalsy();
     expect(article.components.some(c => c.text.startsWith('Zobacz także: Budowa nowego terminalu lotniska Radom-Warszawa oficjalnie zakończona'))).toBeFalsy();
+    expect(article.components.some(c => c.text.startsWith('Zobacz także:'))).toBeFalsy();
+    expect(article.components.some(c => c.text.startsWith('Zobacz też:'))).toBeFalsy();
   })
 })
