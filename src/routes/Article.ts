@@ -2,7 +2,7 @@ import { ArticleState, Component, Prisma } from "@prisma/client";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../storage/prisma";
 import { Wordpress } from "../platforms/Wordpress";
-import { getArticleHtmlContent, getArticleTitle } from "../functions/getArticleTitle";
+import { getArticleTitle } from "../functions/getArticleTitle";
 import { Ghost } from "../platforms/Ghost";
 import { processArticleQueue } from "../storage/queue";
 import { uid } from "uid";
@@ -10,6 +10,7 @@ import { Article } from "../models/Article";
 import { createLinkHeader } from "../functions/createLinkHeader";
 import { applyPatch } from "rfc6902";
 import { mongoStringFromSeed } from "../storage/mongo";
+import { getArticleHtmlContent } from "../functions/getArticleHtmlContent";
 
 type ArticleSortType = 'id_desc' | 'id_asc' | 'title_asc' | 'components_asc' | 'components_desc';
 
