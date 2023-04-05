@@ -62,6 +62,27 @@ export class ArticleController {
     })
   }
 
+  static async create(req: FastifyRequest<{
+    Body: {
+      request_id?: string,
+      components: Component[]
+    }
+  }>, reply: FastifyReply) {
+    if (!req.user) return reply.unauthorized();
+
+    const data: Pick<(Prisma.Without<Prisma.articlesCreateInput, Prisma.articlesUncheckedCreateInput> & Prisma.articlesUncheckedCreateInput) | (Prisma.Without<Prisma.articlesUncheckedCreateInput, Prisma.articlesCreateInput> & Prisma.articlesCreateInput), "request_id" | "components"> = {
+      components: req.body.components,
+    };
+
+    if (req.body.request_id) {
+      data.request_id = req.body.request_id;
+    }
+
+    return new Article({id: req.user.id}).create({
+      data
+    })
+  }
+
   static async list(req: FastifyRequest<{ Querystring: { page?: number, limit?: number, state?: ArticleState, search?: string, sort?: ArticleSortType } }>, reply: FastifyReply) {
     if (!req.user) return reply.unauthorized();
 
@@ -126,11 +147,20 @@ export class ArticleController {
         {source_url: {contains: req.query.search, mode: 'insensitive'}},
       ]
     }
-    return prisma.articles.groupBy({
+    const groupedStates = await prisma.articles.groupBy({
       by: ['state'],
       _count: {_all: true},
       where
-    })
+    });
+
+    const states = ['new', 'queued', 'rejected', 'verification', 'published'];
+
+    return states.map((state) => ({
+      _count: {
+        _all: groupedStates.find(group => group.state === state)?._count._all ?? 0
+      },
+      state
+    }))
   }
 
   static async one(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {

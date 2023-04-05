@@ -94,8 +94,11 @@ export class Article {
 
     const fresh: ArticlePayload = {
       ...old,
-      ...payload
+      state: payload.state ?? old.state,
+      components: payload.components ?? old.components,
     }
+
+    assert.ok(Array.isArray(fresh.components));
 
     const hash = Article.computeHash(fresh)
     if (hash === prev.hash) return prev; // no changes
@@ -106,7 +109,7 @@ export class Article {
     assert(up.length > 0);
     assert(down.length > 0);
 
-    return prisma.articles.update({
+    return await prisma.articles.update({
       where: {
         id_user_id: {
           user_id: this.user_id,
@@ -129,7 +132,7 @@ export class Article {
     })
   }
 
-  async checkout(id: string, hash: string): Promise<{fresh: ArticlePayload, operations: RfcOperation[]}> {
+  async checkout(id: string, hash: string): Promise<{ fresh: ArticlePayload, operations: RfcOperation[] }> {
     const prev = await this.get(id);
     const index = prev.versions.findIndex((v) => v.hash === hash);
     if (index < 0) throw new Error(`Hash ${ hash } not found in versions of article ${ id }`);

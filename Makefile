@@ -7,4 +7,13 @@ up:
 mock:
 	npx tsx watch src/mock.ts
 
-sync-db:
+.ONESHELL:
+sync-prisma:
+	npx prisma format
+	npx prisma validate
+	rm -rf prisma/generated
+	npx prisma generate
+	mkdir -p ../scraping/prisma
+	rsync -a "prisma/schema.prisma" "../scraping/prisma"
+	cd ../scraping
+	npx prisma generate

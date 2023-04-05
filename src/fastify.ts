@@ -1,10 +1,8 @@
 import fastify, { FastifyInstance } from "fastify";
 import { Auth } from "./routes/Auth";
 import cors from '@fastify/cors'
-import { Source } from "./routes/Source";
 import { admin, auth, JWTUser } from "./functions/auth";
 import fastifySensible from '@fastify/sensible'
-import { Request } from "./routes/Request";
 import { ArticleController as Article } from "./routes/Article";
 import { Version } from "./routes/Version";
 import { UserController as User } from "./routes/User";
@@ -20,6 +18,7 @@ import { Health } from "./routes/Health";
 import { serverTimingStart } from "./hooks/serverTimingStart";
 import { serverTimingEnd } from "./hooks/serverTimingEnd";
 import {  errorHandlerGenerator } from "./hooks/errorHandler";
+import { ErrorController } from "./routes/ErrorController";
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -69,19 +68,23 @@ export function getFastifyServer(): FastifyInstance {
   app.get('/', Version.root)
   app.get('/health', Health.root)
 
-  app.get('/source', {preValidation: [auth]}, Source.list)
-  app.post('/source', {preValidation: [auth]}, Source.create)
-  app.delete('/source/:id', {preValidation: [auth]}, Source.remove)
+  // TODO: move
+
+  // app.get('/source', {preValidation: [auth]}, Source.list)
+  // app.post('/source', {preValidation: [auth]}, Source.create)
+  // app.delete('/source/:id', {preValidation: [auth]}, Source.remove)
+  // app.post('/request', {preValidation: [auth]}, Request.inject)
 
   app.get('/target', {preValidation: [auth]}, Target.list)
   app.post('/target', {preValidation: [auth]}, Target.create)
   app.delete('/target/:id', {preValidation: [auth]}, Target.remove)
 
+
   app.post('/processing-template', {preValidation: [auth]}, ProcessingTemplate.create)
 
-  app.post('/request', {preValidation: [auth]}, Request.inject)
 
   app.get('/article', {preValidation: [auth]}, Article.list)
+  app.post('/article', {preValidation: [auth]}, Article.create)
   app.get('/article/:id', {preValidation: [auth]}, Article.one)
   app.get('/article/:id/version/:hash', {preValidation: [auth]}, Article.getVersion)
   app.put('/article/:id', {preValidation: [auth]}, Article.update)
@@ -103,6 +106,9 @@ export function getFastifyServer(): FastifyInstance {
 
   // queue
   app.post('/queue/debug', Queue.addDebug)
+  app.get('/errors', {preValidation: [admin]}, ErrorController.list)
+  app.delete('/errors', {preValidation: [admin]}, ErrorController.removeByStack)
+  app.get('/errors-types', {preValidation: [admin]}, ErrorController.types)
 
   // context
   app.get('/context', {preValidation: [auth]}, Gpt3Context.list)

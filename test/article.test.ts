@@ -4,8 +4,6 @@ import { prisma } from "../src/storage/prisma";
 import { purgeDb } from "../src/storage/purgeDb";
 import { mongoStringFromSeed } from "../src/storage/mongo";
 import assert from "node:assert";
-// import { getFastifyServer } from "../src/fastify";
-import { tokenizeUser } from "../src/functions/auth";
 import { redis } from "../src/storage/ioredis";
 
 describe('article evolution', () => {

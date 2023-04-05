@@ -7,7 +7,10 @@ export class Auth {
     static async googleVerify(req: FastifyRequest<{ Body: { credential: string } }>) {
         try {
             console.log("credential", req.body.credential);
-            const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+            const client = new OAuth2Client({
+                clientId:process.env.GOOGLE_CLIENT_ID,
+                clientSecret:process.env.GOOGLE_CLIENT_SECRET
+            });
             console.log("GOOGLE_CLIENT_ID", process.env.GOOGLE_CLIENT_ID);
             const ticket = await client.verifyIdToken({
                 idToken: req.body.credential,

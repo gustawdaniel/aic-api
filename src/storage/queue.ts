@@ -114,14 +114,14 @@ export const processArticleQueue = new AsyncQueue<ProcessArticleQueueItem>(async
       // no process this paragraph
     }
 
-    counter++;
-
     dispatchQueueProgress({
       id: item.queue_id,
       type: 'process-article',
       progress: counter / article.components.length,
       resource_id: item.article_id
     });
+
+    counter++;
   }
 
   await new Article({id: item.user_id}).update(id, {
