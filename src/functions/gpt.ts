@@ -1,10 +1,6 @@
 import { prisma } from "../storage/prisma";
 import dayjs from "dayjs";
 import { backoff, Gpt3Message } from "./backoff";
-import { wordsCount } from "./wordsCount";
-
-// // Set your API key as an environment variable
-// const API_KEY = process.env.OPENAI_API_KEY;
 
 export interface GptSimpleResponse {
   id: string,

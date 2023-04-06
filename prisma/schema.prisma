@@ -16,7 +16,7 @@ enum RequestType {
 }
 
 enum SourceType {
-  buisnesinsider
+  businessinsider
   ghost
 }
 
