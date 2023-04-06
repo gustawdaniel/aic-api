@@ -27,6 +27,8 @@ enum TargetType {
 
 enum UserRole {
   admin
+  pro
+  hacker
 }
 
 model sources {
@@ -157,6 +159,14 @@ model targets {
   user_id String         @db.ObjectId
 }
 
+model payments {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  user       users    @relation(fields: [user_id], references: [id])
+  user_id    String   @db.ObjectId
+  cents      Int
+  created_at DateTime
+}
+
 model users {
   id                   String                 @id @default(auto()) @map("_id") @db.ObjectId
   email                String                 @unique
@@ -167,10 +177,12 @@ model users {
   requests             requests[]
   articles             articles[]
   prompts              prompts[]
+  payments             payments[]
   roles                UserRole[]             @default([])
   gpt3_api_key         String?
   processing_templates processing_templates[]
   contexts             contexts[]
+  exp_at               DateTime?
 }
 
 enum GptRole {
