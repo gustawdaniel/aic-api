@@ -7,6 +7,7 @@ import { dispatchQueueProgress, ee } from "./event";
 import { uid } from "uid";
 import { Gpt3Message } from "../functions/backoff";
 import { Article } from "../models/Article";
+import { getArticleTitle } from "../functions/getArticleTitle";
 
 function getCommand(
   processing_template: processing_templates,
@@ -72,7 +73,8 @@ export const processArticleQueue = new AsyncQueue<ProcessArticleQueueItem>(async
 
   if (!gpt3_api_key) {
     await new Article({id: item.user_id}).update(id, {
-      state: 'new'
+      state: 'new',
+      title: '',
     });
     return;
   }
@@ -126,7 +128,8 @@ export const processArticleQueue = new AsyncQueue<ProcessArticleQueueItem>(async
 
   await new Article({id: item.user_id}).update(id, {
     components: article.components,
-    state: 'verification'
+    state: 'verification',
+    title: getArticleTitle({title: '', components: article.components})
   });
 
 

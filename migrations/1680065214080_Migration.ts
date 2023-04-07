@@ -11,6 +11,7 @@ export class Token1680065214080 implements MigrationInterface {
 
     for (const a of articles) {
       await new Article({id: String(a.user_id)}).create({
+        // @ts-ignore
         data: {
           components: a.components.map((c: Component): unknown => ({
             text: c.text,

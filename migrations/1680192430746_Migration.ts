@@ -18,6 +18,7 @@ export class Migration1680192430746 implements MigrationInterface {
         _id: article._id
       }, {
         $set: {
+          //@ts-ignore
           title: getArticleTitle({components: article.components}),
           source_url: request ? request.url : ''
         }

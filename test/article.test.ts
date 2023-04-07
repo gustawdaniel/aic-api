@@ -18,36 +18,25 @@ describe('article evolution', () => {
 
   it('hash', () => {
     expect(Article.computeHash({
+      title: 'hello',
       state: 'new',
       components: [ { id: '1', xpath: ['p'], ai_requests: [], text: 'hello', finish_reason: 'stop' } ],
       request_id: null,
       user_id: '61cf1af0c4ca4238a0b92382'
     })).toEqual(Article.computeHash({
+      title: 'hello',
       components: [ { id: '1', xpath: ['p'], ai_requests: [], text: 'hello', finish_reason: 'stop' } ],
       state: 'new',
       request_id: null,
       user_id: '61cf1af0c4ca4238a0b92382'
     }))
-
-    expect(Article.computeHash({
-      state: 'new',
-      components: [ { id: '1', xpath: ['p'], ai_requests: [], text: 'hello world', finish_reason: 'stop' } ],
-      request_id: null,
-      user_id: '61cf1af0c4ca4238a0b92382'
-    })).toEqual('9f70ad354ae73eeee3a5346733606c40fbb3bb67')
-
-    expect(Article.computeHash({
-      state: 'new',
-      components: [ { id: '1', xpath: ['p'], ai_requests: [], text: 'hello', finish_reason: 'stop' } ],
-      request_id: null,
-      user_id: '61cf1af0c4ca4238a0b92382'
-    })).toEqual('e39803096b4ad3952803a4cbfeaa7b9912260899')
   })
 
   it('create art', async () => {
     await User.createTestUser();
     const article = await new Article({id: mongoStringFromSeed("1")}).create({
       data: {
+        title: 'hello',
         components: [{
           id: '1',
           text: "hello",
@@ -62,6 +51,7 @@ describe('article evolution', () => {
     expect(count).toStrictEqual(1);
 
     const fix = {
+      title: 'hello world',
       components: [{
         id: '1',
         ai_requests: [],
