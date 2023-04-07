@@ -94,6 +94,7 @@ export function getFastifyServer(): FastifyInstance {
   app.get('/article-count-by-stata', {preValidation: [auth]}, Article.countByState)
 
   app.get('/user', {preValidation: [admin]}, User.list)
+  app.post('/user/role', {preValidation: [admin]}, User.setRole)
   app.get('/me', {preValidation: [auth]}, User.getMe)
   app.patch('/me', {preValidation: [auth]}, User.pathMe)
 

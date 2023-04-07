@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import axios, {AxiosRequestConfig} from "axios";
 
 //@ts-ignore
-import GhostAdminAPI from "@tryghost/admin-api";
+// import GhostAdminAPI from "@tryghost/admin-api";
 
 type GhostRole = any;
 
@@ -95,15 +95,16 @@ interface GhostPublishResponse {
 export class Ghost {
     private readonly url: string;
     private readonly config: AxiosRequestConfig;
-    private readonly api: GhostAdminAPI;
+    // private readonly api: GhostAdminAPI;
 
-    constructor(url: string, adminKey: string, version: string = 'v5.37') {
+    constructor(url: string, adminKey: string, // version: string = 'v5.37'
+    ) {
         this.url = url;
-        this.api = new GhostAdminAPI({
-            url,
-            key: adminKey,
-            version
-        });
+        // this.api = new GhostAdminAPI({
+        //     url,
+        //     key: adminKey,
+        //     version
+        // });
 
         this.config = {
             headers: {

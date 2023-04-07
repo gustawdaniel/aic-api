@@ -8,8 +8,6 @@ import { processArticleQueue } from "../storage/queue";
 import { uid } from "uid";
 import { Article } from "../models/Article";
 import { createLinkHeader } from "../functions/createLinkHeader";
-import { applyPatch } from "rfc6902";
-import { mongoStringFromSeed } from "../storage/mongo";
 import { getArticleHtmlContent } from "../functions/getArticleHtmlContent";
 
 type ArticleSortType = 'id_desc' | 'id_asc' | 'title_asc' | 'components_asc' | 'components_desc';
@@ -71,8 +69,9 @@ export class ArticleController {
   }>, reply: FastifyReply) {
     if (!req.user) return reply.unauthorized();
 
-    const data: Pick<(Prisma.Without<Prisma.articlesCreateInput, Prisma.articlesUncheckedCreateInput> & Prisma.articlesUncheckedCreateInput) | (Prisma.Without<Prisma.articlesUncheckedCreateInput, Prisma.articlesCreateInput> & Prisma.articlesCreateInput), "request_id" | "components"> = {
+    const data: Pick<(Prisma.Without<Prisma.articlesCreateInput, Prisma.articlesUncheckedCreateInput> & Prisma.articlesUncheckedCreateInput) | (Prisma.Without<Prisma.articlesUncheckedCreateInput, Prisma.articlesCreateInput> & Prisma.articlesCreateInput), 'title' | "request_id" | "components"> = {
       components: req.body.components,
+      title: getArticleTitle({title: '', components: req.body.components})
     };
 
     if (req.body.request_id) {
@@ -235,7 +234,8 @@ export class ArticleController {
         state: ArticleState,
         processing_template_id?: string,
         queue_id?: string,
-        components?: Component[]
+        components?: Component[],
+        title?: string,
       }, Params: { id: string }
     }>, reply: FastifyReply) {
     if (!req.user) return reply.unauthorized();
@@ -275,7 +275,8 @@ export class ArticleController {
 
     return new Article(req.user).update(req.params.id, {
       state: req.body.state,
-      components: req.body.components
+      components: req.body.components,
+      title: req.body.title ?? getArticleTitle({title: req.body.title ?? '', components: req.body.components ?? []})
     })
   }
 
@@ -319,7 +320,8 @@ export class ArticleController {
     }
 
     await new Article(req.user).update(article.id, {
-      state: 'published'
+      state: 'published',
+      title: title,
     })
 
     return {status: 'success'}

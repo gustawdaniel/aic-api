@@ -5,7 +5,7 @@ import assert from "node:assert";
 import hash from 'object-hash';
 import { getArticleTitle } from "../functions/getArticleTitle";
 
-type ArticlePayload = Pick<Prisma.articlesUncheckedCreateInput, 'request_id' | 'components' | 'user_id' | 'state'>;
+type ArticlePayload = Pick<Prisma.articlesUncheckedCreateInput, 'title' | 'request_id' | 'components' | 'user_id' | 'state'>;
 
 export class Article {
   private readonly user_id: string
@@ -20,6 +20,7 @@ export class Article {
 
   private getPayload(article: articles): ArticlePayload {
     return {
+      title: article.title,
       state: article.state,
       components: article.components,
       request_id: article.request_id,
@@ -37,8 +38,9 @@ export class Article {
     return request ? request.url : '';
   }
 
-  async create({data}: { data: Pick<Prisma.XOR<Prisma.articlesCreateInput, Prisma.articlesUncheckedCreateInput>, 'request_id' | 'components'> }) {
-    const payload: Pick<Prisma.articlesUncheckedCreateInput, 'request_id' | 'components' | 'user_id' | 'state'> = {
+  async create({data}: { data: Pick<Prisma.XOR<Prisma.articlesCreateInput, Prisma.articlesUncheckedCreateInput>, 'title' | 'request_id' | 'components'> }) {
+    const payload: Pick<Prisma.articlesUncheckedCreateInput, 'title' | 'request_id' | 'components' | 'user_id' | 'state'> = {
+      title: data.title,
       user_id: this.user_id,
       request_id: data.request_id ?? null,
       components: data.components,
@@ -48,7 +50,7 @@ export class Article {
     return prisma.articles.create({
       data: {
         ...payload,
-        title: getArticleTitle({components: data.components as Component[]}),
+        title: getArticleTitle({title: '', components: data.components as Component[]}),
         source_url: await Article.getSourceUlr(data.request_id),
         hash: Article.computeHash(payload),
         versions: {
@@ -87,13 +89,14 @@ export class Article {
     })
   }
 
-  async update(id: string, payload: Pick<Prisma.articlesUncheckedCreateInput, 'components' | 'state'>) {
+  async update(id: string, payload: Pick<Prisma.articlesUncheckedCreateInput, 'components' | 'state' | 'title'>) {
     const prev = await this.get(id);
 
     const old = this.getPayload(prev);
 
     const fresh: ArticlePayload = {
       ...old,
+      title: payload.title ?? old.title,
       state: payload.state ?? old.state,
       components: payload.components ?? old.components,
     }
@@ -103,8 +106,12 @@ export class Article {
     const hash = Article.computeHash(fresh)
     if (hash === prev.hash) return prev; // no changes
 
+    console.log("old, fresh", old, fresh);
+
     const up = createPatch(old, fresh);
     const down = createPatch(fresh, old);
+
+    if(up.length === 0 && down.length === 0) return prev; // no changes
 
     assert(up.length > 0);
     assert(down.length > 0);
@@ -118,7 +125,7 @@ export class Article {
       },
       data: {
         hash,
-        title: getArticleTitle({components: fresh.components as Component[]}),
+        title: getArticleTitle({title: payload.title, components: fresh.components as Component[]}),
         state: fresh.state,
         components: fresh.components,
         versions: {
@@ -162,7 +169,7 @@ export class Article {
       },
       data: {
         hash,
-        title: getArticleTitle({components: fresh.components as Component[]}),
+        title: getArticleTitle({title: fresh.title, components: fresh.components as Component[]}),
         state: fresh.state,
         components: fresh.components,
         versions: {
