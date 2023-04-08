@@ -6,3 +6,5 @@ SECRET.md
 .env.prod
 scripts/aic.archive
 scripts/sync-db.sh
+scripts/wp-publish.ts
+scripts/wp-p.js
